@@ -1,1 +1,1 @@
-# PerformanceBenchmarkReporter
+The Unity Performance Benchmark tool enables partners and developers to establish benchmark samples and measurements using the Performance Testing package, then use these benchmark values to compare subsequent performance test results in an html output utilizing graphical visualizations.

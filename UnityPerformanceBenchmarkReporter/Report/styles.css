@@ -1,0 +1,281 @@
+﻿.body * {
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif !important;
+}
+
+h1 {
+    font-size: 3vh;
+    overflow-wrap: break-word;
+}
+
+h3 {
+    font-size: 1.5vh;
+    overflow-wrap: break-word;
+}
+
+.titletable {
+    height: 80%;
+    width: 100%;
+    padding: 5px 5px 5px 5px;
+}
+
+.logocell {
+    padding: 10px;
+    background-color: black;
+}
+
+.logo {
+    width: 30%;
+    vertical-align: bottom;
+    max-width: 400px;
+}
+
+.titlecell {
+    padding-left: 10px;
+    background-color: black;
+}
+
+.title {
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    color: white;
+    text-align: left;
+    vertical-align: bottom
+}
+
+.testconfigtable {
+    padding: 5px 5px 5px 5px;
+    width: 100%;
+}
+
+.testconfig {
+    display: none
+}
+
+.systeminfo > div {
+    display: inline-block;
+    *display: inline; /* For IE7 */
+    zoom: 1; /* Trigger hasLayout */
+    width: 15%;
+    text-align: left;
+    vertical-align: text-top;
+    font-size: small;
+    padding: 5px 5px 5px 5px;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+}
+
+.testnamecell {
+    background-color: lightgray;
+}
+
+.testname {
+    color: black;
+}
+
+.initialbutton {
+    font-size: 1.25vh;
+    background-color: #2196F3;
+    border: none;
+    color: white;
+    padding: 15px 25px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.button {
+    font-size: 1.25vh;
+    background-color: #3e6892;
+    border: none;
+    color: white;
+    padding: 15px 25px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+    .button:hover {
+        background-color: #2196F3 !important;
+    }
+
+.buttondiv {
+    display: inline;
+}
+
+.initialbutton:hover {
+    background-color: #2196F3 !important;
+}
+
+
+.buttonheader {
+    font-size: 1.25vh;
+    font-weight: bold;
+    padding: 5px 5px 5px 0px;
+}
+
+.showedfailedtests {
+    padding: 5px 5px 5px 0px;
+}
+
+.typename {
+    text-align: left;
+    font-weight: bold;
+    font-size: 1.25vh;
+    background-color: black;
+    color: white;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    padding: 5px 5px 5px 10px;
+}
+
+.fieldname {
+    font-weight: bold;
+    font-size: 1.15vh;
+    overflow-wrap: break-word;
+}
+
+.fieldvalue {
+    font-size: 1vh;
+    padding: 5px 5px 5px 0px;
+    overflow-wrap: break-word;
+}
+
+.containerLabel {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 1.25vh;
+    font-weight: bold;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+}
+
+    /* Hide the browser's default checkbox */
+    .containerLabel input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+/* Create a custom checkbox */
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4vh;
+    width: 4vh;
+    max-height: 24px;
+    max-width: 24px;
+    background-color: #eee;
+    border-radius: 4px;
+}
+
+/* On mouse-over, add a grey background color */
+.containerLabel:hover input ~ .checkmark {
+    background-color: #2196F3;
+}
+
+/* When the checkbox is checked, add a blue background */
+.containerLabel input:checked ~ .checkmark {
+    background-color: #2196F3;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+/* Show the checkmark when checked */
+.containerLabel input:checked ~ .checkmark:after {
+    display: block;
+}
+
+/* Style the checkmark/indicator */
+.containerLabel .checkmark:after {
+    left: 9px;
+    top: 5px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.disabledContainerLabel {
+    display: block;
+    font-weight: bold;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: medium;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+}
+
+    /* Hide the browser's default checkbox */
+    .disabledContainerLabel input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .disabledContainerLabel .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: #2196F3;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        z-index: 1;
+        top: -5px;
+        left: 105%;
+        padding: 5px 5px 5px 5px;
+        font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    }
+
+    .disabledContainerLabel:hover .tooltiptext {
+        visibility: visible;
+    }
+
+.visualizationTable {
+    width: 100%;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    padding: 5px 5px 5px 5px;
+}
+
+.statMethodTable {
+    width: 100%;
+    border: none;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    padding: 5px 5px 5px 5px;
+}
+
+.chartcell {
+    padding: 5px 5px 5px 10px;
+}
+
+.container {
+    position: relative;
+    width: 99%;
+    height: 18vh;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+}
+
+.divider {
+    width: 5px;
+    height: auto;
+    display: inline-block;
+}

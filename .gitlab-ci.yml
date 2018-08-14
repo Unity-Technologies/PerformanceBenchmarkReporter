@@ -1,0 +1,19 @@
+stages:
+  - build
+build:win:
+  stage: build
+  tags:
+    - buildfarm
+    - windows
+    - "10"
+  before_script:
+   - echo "Installing dotnetcore-sdk"
+   - 'powershell -Command "Unblock-File dotnet-install.ps1 && powershell -Command ".\dotnet-install.ps1 -InstallDir C:\Program Files\dotnet"'
+  script:
+  - echo "Building solution"
+  - '"C:\Program Files\dotnet\dotnet.exe" build'
+#  - echo "Running tests"
+#  - cd UnityPerformanceBenchmarkReporterTests
+#  - '"C:\Program Files\dotnet\dotnet.exe" test --logger "trx;LogFileName=UnityPerformanceBenchmarkReporterTests.trx"'
+after_script:
+- C:\Users\builduser\post_build_script.bat
