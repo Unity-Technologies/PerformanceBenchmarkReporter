@@ -7,10 +7,10 @@ namespace UnityPerformanceBenchmarkReporter
     public class OptionsParser
     {
         private bool help;
-        private readonly string about = "The Unity Performance Benchmark Reporter enables the comparison of baseline and subsequent performance test measurements (as generated using the Unity Test Runner with the Unity Performance Testing package) in an html report utilizing graphical visualizations.";
+        private readonly string about = "The Unity Performance Benchmark Reporter enables the comparison of performance metric baselines and subsequent performance metrics (as generated using the Unity Test Runner with the Unity Performance Testing Extension package) in an html report utilizing graphical visualizations.";
 
         private readonly string learnMore =
-            "To learn more about the Unity Performance Benchmark Reporter visit the Unity PerformanceBenchmark GitHub wiki at https://github.com/Unity-Technologies/PerformanceBenchmark/wiki.";
+            "To learn more about the Unity Performance Benchmark Reporter visit the Unity PerformanceBenchmark GitHub wiki at https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki.";
 
         private string sigFigString;
 
