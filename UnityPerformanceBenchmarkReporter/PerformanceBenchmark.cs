@@ -17,6 +17,7 @@ namespace UnityPerformanceBenchmarkReporter
         public string ReportDirPath { get; set; }
 
         private bool firstResult = true;
+        private string firstTestRunResultPath;
         private PerformanceTestRun firstTestRun = new PerformanceTestRun();
         private readonly PerformanceTestRunProcessor performanceTestRunProcessor = new PerformanceTestRunProcessor();
         private readonly string xmlFileExtension = ".xml";
@@ -92,7 +93,7 @@ namespace UnityPerformanceBenchmarkReporter
 
                         performanceTestRunProcessor.UpdateTestResultsBasedOnBaselineResults(baselineTestResults, testResults, SigFig);
 
-                        ValidateMetadata(performanceTestRun);
+                        ValidateMetadata(performanceTestRun, xmlFileNamePath);
                         runResults.Add(performanceTestRunProcessor.CreateTestRunResult
                             (
                                 firstTestRun,
@@ -112,20 +113,21 @@ namespace UnityPerformanceBenchmarkReporter
             return xmlFileNames;
         }
 
-        private void ValidateMetadata(PerformanceTestRun performanceTestRun)
+        private void ValidateMetadata(PerformanceTestRun performanceTestRun, string xmlFileNamePath)
         {
             if (firstResult)
             {
+                firstTestRunResultPath = xmlFileNamePath;
                 firstTestRun = performanceTestRun;
                 firstResult = false;
             }
             else
             {
                 var metadataValidator = new MetadataValidator();
-                metadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun);
-                metadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun);
-                metadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun);
-                metadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun);
+                metadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                metadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                metadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                metadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
             }
         }
 
