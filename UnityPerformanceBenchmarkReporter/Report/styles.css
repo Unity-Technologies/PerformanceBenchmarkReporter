@@ -54,11 +54,19 @@ h3 {
     display: inline-block;
     *display: inline; /* For IE7 */
     zoom: 1; /* Trigger hasLayout */
-    width: 15%;
+    width: 20%;
     text-align: left;
     vertical-align: text-top;
-    font-size: small;
-    padding: 5px 5px 5px 5px;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+}
+
+.systeminfowide > div {
+    display: inline-block;
+    *display: inline; /* For IE7 */
+    zoom: 1; /* Trigger hasLayout */
+    width: 50%;
+    text-align: left;
+    vertical-align: text-top;
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
 }
 
@@ -127,6 +135,9 @@ h3 {
     padding: 5px 5px 5px 10px;
 }
 
+.fieldgroup {
+}
+
 .fieldname {
     font-weight: bold;
     font-size: 1.15vh;
@@ -135,8 +146,19 @@ h3 {
 
 .fieldvalue {
     font-size: 1vh;
-    padding: 5px 5px 5px 0px;
-    overflow-wrap: break-word;
+}
+
+.fieldvaluewarning {
+    font-size: 1vh;
+    color: darkorange;
+}
+
+pre {
+    white-space: pre-wrap; /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
 }
 
 .containerLabel {

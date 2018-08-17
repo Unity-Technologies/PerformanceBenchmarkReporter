@@ -6,34 +6,72 @@ using UnityPerformanceBenchmarkReporter.Entities;
 
 namespace UnityPerformanceBenchmarkReporter
 {
-    internal class MetadataValidator
+    public class MetadataValidator
     {
-        private string[] playerSystemInfoResultFiles = Array.Empty<string>();
-        private Dictionary<string, Dictionary<string, string>> mismatchedPlayerSystemInfoValues = new Dictionary<string, Dictionary<string, string>>();
+        public string[] PlayerSystemInfoResultFiles = Array.Empty<string>();
+        public readonly Dictionary<string, Dictionary<string, string>> MismatchedPlayerSystemInfoValues = new Dictionary<string, Dictionary<string, string>>();
+        public string[] PlayerSettingsResultFiles = Array.Empty<string>();
+        public readonly Dictionary<string, Dictionary<string, string>> MismatchedPlayerSettingsValues = new Dictionary<string, Dictionary<string, string>>();
+        public string[] QualitySettingsResultFiles = Array.Empty<string>();
+        public readonly Dictionary<string, Dictionary<string, string>> MismatchedQualitySettingsValues = new Dictionary<string, Dictionary<string, string>>();
+        public string[] ScreenSettingsResultFiles = Array.Empty<string>();
+        public readonly Dictionary<string, Dictionary<string, string>> MismatchedScreenSettingsValues = new Dictionary<string, Dictionary<string, string>>();
+        public string[] BuildSettingsResultFiles = Array.Empty<string>();
+        public readonly Dictionary<string, Dictionary<string, string>> MismatchedBuildSettingsValues = new Dictionary<string, Dictionary<string, string>>();
+        public string[] EditorVersionResultFiles = Array.Empty<string>();
+        public readonly Dictionary<string, Dictionary<string, string>> MismatchedEditorVersionValues = new Dictionary<string, Dictionary<string, string>>();
 
         public void ValidatePlayerSystemInfo(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
         {
             if (testRun1.PlayerSystemInfo.DeviceModel != testRun2.PlayerSystemInfo.DeviceModel)
             {
-                WriteWarningMessage("Test results with mismatching PlayerSystemInfo.DeviceModeltestRun");
+                AddMismatchPlayerMetadata(
+                    ref PlayerSystemInfoResultFiles,
+                    MismatchedPlayerSystemInfoValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSystemInfo.DeviceModel),
+                    testRun1.PlayerSystemInfo.DeviceModel,
+                    testRun2.PlayerSystemInfo.DeviceModel);
             }
             if (testRun1.PlayerSystemInfo.GraphicsDeviceName != testRun2.PlayerSystemInfo.GraphicsDeviceName)
             {
-                WriteWarningMessage("Test results with mismatching PlayerSystemInfo.GraphicsDeviceName");
+                AddMismatchPlayerMetadata(
+                    ref PlayerSystemInfoResultFiles,
+                    MismatchedPlayerSystemInfoValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSystemInfo.GraphicsDeviceName),
+                    testRun1.PlayerSystemInfo.GraphicsDeviceName,
+                    testRun2.PlayerSystemInfo.GraphicsDeviceName);
             }
             if (testRun1.PlayerSystemInfo.ProcessorCount != testRun2.PlayerSystemInfo.ProcessorCount)
             {
-                WriteWarningMessage("Test results with mismatching PlayerSystemInfo.ProcessorCount");
+                AddMismatchPlayerMetadata(
+                    ref PlayerSystemInfoResultFiles,
+                    MismatchedPlayerSystemInfoValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSystemInfo.ProcessorCount),
+                    testRun1.PlayerSystemInfo.ProcessorCount.ToString(),
+                    testRun2.PlayerSystemInfo.ProcessorCount.ToString());
             }
             if (testRun1.PlayerSystemInfo.ProcessorType != testRun2.PlayerSystemInfo.ProcessorType)
             {
-                WriteWarningMessage("Test results with mismatching PlayerSystemInfo.ProcessorType");
+                AddMismatchPlayerMetadata(
+                    ref PlayerSystemInfoResultFiles,
+                    MismatchedPlayerSystemInfoValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSystemInfo.ProcessorType),
+                    testRun1.PlayerSystemInfo.ProcessorType,
+                    testRun2.PlayerSystemInfo.ProcessorType);
             }
             if (testRun1.PlayerSystemInfo.XrDevice != testRun2.PlayerSystemInfo.XrDevice)
             {
-                AddMismatchPlayerInfo(
-                    ref playerSystemInfoResultFiles, 
-                    mismatchedPlayerSystemInfoValues, 
+                AddMismatchPlayerMetadata(
+                    ref PlayerSystemInfoResultFiles, 
+                    MismatchedPlayerSystemInfoValues, 
                     firstTestRunResultPath, 
                     xmlFileNamePath, 
                     nameof(testRun1.PlayerSystemInfo.XrDevice), 
@@ -42,26 +80,325 @@ namespace UnityPerformanceBenchmarkReporter
             }
             if (testRun1.PlayerSystemInfo.XrModel != testRun2.PlayerSystemInfo.XrModel)
             {
-                AddMismatchPlayerInfo(
-                    ref playerSystemInfoResultFiles, 
-                    mismatchedPlayerSystemInfoValues, 
+                AddMismatchPlayerMetadata(
+                    ref PlayerSystemInfoResultFiles, 
+                    MismatchedPlayerSystemInfoValues, 
                     firstTestRunResultPath, 
                     xmlFileNamePath, 
                     nameof(testRun1.PlayerSystemInfo.XrModel), 
                     testRun1.PlayerSystemInfo.XrModel, 
                     testRun2.PlayerSystemInfo.XrModel);
             }
+        }
 
-            if (mismatchedPlayerSystemInfoValues.Count > 0)
+        public void ValidatePlayerSettings(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
+        {
+            if (testRun1.PlayerSettings.AndroidMinimumSdkVersion != testRun2.PlayerSettings.AndroidMinimumSdkVersion)
             {
-                WriteWarningMessage(
-                    string.Format("Test results with mismatched {0}", "SystemInfo PlayerSettings"), 
-                    playerSystemInfoResultFiles,
-                    mismatchedPlayerSystemInfoValues);
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.AndroidMinimumSdkVersion),
+                    testRun1.PlayerSettings.AndroidMinimumSdkVersion,
+                    testRun2.PlayerSettings.AndroidMinimumSdkVersion);
+            }
+            if (testRun1.PlayerSettings.AndroidTargetSdkVersion != testRun2.PlayerSettings.AndroidTargetSdkVersion)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.AndroidTargetSdkVersion),
+                    testRun1.PlayerSettings.AndroidTargetSdkVersion,
+                    testRun2.PlayerSettings.AndroidTargetSdkVersion);
+            }
+            // TODO Refactor this to match all strings, not one by one
+            foreach (var enabledXrTarget in testRun1.PlayerSettings.EnabledXrTargets)
+            {
+                if (!testRun2.PlayerSettings.EnabledXrTargets.Contains(enabledXrTarget))
+                {
+                    WriteWarningMessage("Test results with mismatching PlayerSettings.EnabledXrTargets");  
+                }
+            }
+            if (testRun1.PlayerSettings.GpuSkinning != testRun2.PlayerSettings.GpuSkinning)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.GpuSkinning),
+                    testRun1.PlayerSettings.GpuSkinning.ToString(),
+                    testRun2.PlayerSettings.GpuSkinning.ToString());
+            }
+            if (testRun1.PlayerSettings.GraphicsApi != testRun2.PlayerSettings.GraphicsApi)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.GraphicsApi),
+                    testRun1.PlayerSettings.GraphicsApi,
+                    testRun2.PlayerSettings.GraphicsApi);
+            }
+            if (testRun1.PlayerSettings.GraphicsJobs != testRun2.PlayerSettings.GraphicsJobs)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.GraphicsJobs),
+                    testRun1.PlayerSettings.GraphicsJobs.ToString(),
+                    testRun2.PlayerSettings.GraphicsJobs.ToString());
+            }
+            if (testRun1.PlayerSettings.MtRendering != testRun2.PlayerSettings.MtRendering)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.MtRendering),
+                    testRun1.PlayerSettings.MtRendering.ToString(),
+                    testRun2.PlayerSettings.MtRendering.ToString());
+            }
+            if (testRun1.PlayerSettings.RenderThreadingMode != testRun2.PlayerSettings.RenderThreadingMode)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.RenderThreadingMode),
+                    testRun1.PlayerSettings.RenderThreadingMode,
+                    testRun2.PlayerSettings.RenderThreadingMode);
+            }
+            if (testRun1.PlayerSettings.ScriptingBackend != testRun2.PlayerSettings.ScriptingBackend)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.ScriptingBackend),
+                    testRun1.PlayerSettings.ScriptingBackend,
+                    testRun2.PlayerSettings.ScriptingBackend);
+            }
+            if (testRun1.PlayerSettings.StereoRenderingPath != testRun2.PlayerSettings.StereoRenderingPath)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.StereoRenderingPath),
+                    testRun1.PlayerSettings.StereoRenderingPath,
+                    testRun2.PlayerSettings.StereoRenderingPath);
+            }
+            if (testRun1.PlayerSettings.VrSupported != testRun2.PlayerSettings.VrSupported)
+            {
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.VrSupported),
+                    testRun1.PlayerSettings.VrSupported.ToString(),
+                    testRun2.PlayerSettings.VrSupported.ToString());
             }
         }
 
-        private void AddMismatchPlayerInfo(
+        public void ValidateQualitySettings(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
+        {
+            if (testRun1.QualitySettings.AnisotropicFiltering != testRun2.QualitySettings.AnisotropicFiltering)
+            {
+                AddMismatchPlayerMetadata(
+                    ref QualitySettingsResultFiles,
+                    MismatchedQualitySettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.QualitySettings.AnisotropicFiltering),
+                    testRun1.QualitySettings.AnisotropicFiltering,
+                    testRun2.QualitySettings.AnisotropicFiltering);
+            }
+            if (testRun1.QualitySettings.AntiAliasing != testRun2.QualitySettings.AntiAliasing)
+            {
+                AddMismatchPlayerMetadata(
+                    ref QualitySettingsResultFiles,
+                    MismatchedQualitySettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.QualitySettings.AntiAliasing),
+                    testRun1.QualitySettings.AntiAliasing.ToString(),
+                    testRun2.QualitySettings.AntiAliasing.ToString());
+            }
+            if (testRun1.QualitySettings.BlendWeights != testRun2.QualitySettings.BlendWeights)
+            {
+                AddMismatchPlayerMetadata(
+                    ref QualitySettingsResultFiles,
+                    MismatchedQualitySettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.QualitySettings.BlendWeights),
+                    testRun1.QualitySettings.BlendWeights,
+                    testRun2.QualitySettings.BlendWeights);
+            }
+            if (testRun1.QualitySettings.ColorSpace != testRun2.QualitySettings.ColorSpace)
+            {
+                AddMismatchPlayerMetadata(
+                    ref QualitySettingsResultFiles,
+                    MismatchedQualitySettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.QualitySettings.ColorSpace),
+                    testRun1.QualitySettings.ColorSpace,
+                    testRun2.QualitySettings.ColorSpace);
+            }
+            if (testRun1.QualitySettings.Vsync != testRun2.QualitySettings.Vsync)
+            {
+                AddMismatchPlayerMetadata(
+                    ref QualitySettingsResultFiles,
+                    MismatchedQualitySettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.QualitySettings.Vsync),
+                    testRun1.QualitySettings.Vsync.ToString(),
+                    testRun2.QualitySettings.Vsync.ToString());
+            }
+        }
+
+        public void ValidateScreenSettings(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
+        {
+            if (testRun1.ScreenSettings.Fullscreen != testRun2.ScreenSettings.Fullscreen)
+            {
+                AddMismatchPlayerMetadata(
+                    ref ScreenSettingsResultFiles,
+                    MismatchedScreenSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.ScreenSettings.Fullscreen),
+                    testRun1.ScreenSettings.Fullscreen.ToString(),
+                    testRun2.ScreenSettings.Fullscreen.ToString());
+            }
+            if (testRun1.ScreenSettings.ScreenHeight != testRun2.ScreenSettings.ScreenHeight)
+            {
+                AddMismatchPlayerMetadata(
+                    ref ScreenSettingsResultFiles,
+                    MismatchedScreenSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.ScreenSettings.ScreenHeight),
+                    testRun1.ScreenSettings.ScreenHeight.ToString(),
+                    testRun2.ScreenSettings.ScreenHeight.ToString());
+            }
+            if (testRun1.ScreenSettings.ScreenRefreshRate != testRun2.ScreenSettings.ScreenRefreshRate)
+            {
+                AddMismatchPlayerMetadata(
+                    ref ScreenSettingsResultFiles,
+                    MismatchedScreenSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.ScreenSettings.ScreenRefreshRate),
+                    testRun1.ScreenSettings.ScreenRefreshRate.ToString(),
+                    testRun2.ScreenSettings.ScreenRefreshRate.ToString());
+            }
+            if (testRun1.ScreenSettings.ScreenWidth != testRun2.ScreenSettings.ScreenWidth)
+            {
+                AddMismatchPlayerMetadata(
+                    ref ScreenSettingsResultFiles,
+                    MismatchedScreenSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.ScreenSettings.ScreenWidth),
+                    testRun1.ScreenSettings.ScreenWidth.ToString(),
+                    testRun2.ScreenSettings.ScreenWidth.ToString());
+            }
+        }
+
+        public void ValidateBuildSettings(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
+        {
+            if (testRun1.BuildSettings.Platform != testRun2.BuildSettings.Platform)
+            {
+                AddMismatchPlayerMetadata(
+                    ref BuildSettingsResultFiles,
+                    MismatchedBuildSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.BuildSettings.Platform),
+                    testRun1.BuildSettings.Platform,
+                    testRun2.BuildSettings.Platform);
+            }
+
+            if (testRun1.BuildSettings.BuildTarget != testRun2.BuildSettings.BuildTarget)
+            {
+                AddMismatchPlayerMetadata(
+                    ref BuildSettingsResultFiles,
+                    MismatchedBuildSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.BuildSettings.BuildTarget),
+                    testRun1.BuildSettings.BuildTarget,
+                    testRun2.BuildSettings.BuildTarget);
+            }
+
+            if (testRun1.BuildSettings.DevelopmentPlayer != testRun2.BuildSettings.DevelopmentPlayer)
+            {
+                AddMismatchPlayerMetadata(
+                    ref BuildSettingsResultFiles,
+                    MismatchedBuildSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.BuildSettings.DevelopmentPlayer),
+                    testRun1.BuildSettings.DevelopmentPlayer.ToString(),
+                    testRun2.BuildSettings.DevelopmentPlayer.ToString());
+            }
+
+            if (testRun1.BuildSettings.AndroidBuildSystem != testRun2.BuildSettings.AndroidBuildSystem)
+            {
+                AddMismatchPlayerMetadata(
+                    ref BuildSettingsResultFiles,
+                    MismatchedBuildSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.BuildSettings.AndroidBuildSystem),
+                    testRun1.BuildSettings.AndroidBuildSystem,
+                    testRun2.BuildSettings.AndroidBuildSystem);
+            }
+        }
+
+        public void ValidateEditorVersion(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
+        {
+            if (testRun1.EditorVersion.FullVersion != testRun2.EditorVersion.FullVersion)
+            {
+                AddMismatchPlayerMetadata(
+                    ref EditorVersionResultFiles,
+                    MismatchedEditorVersionValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.EditorVersion.FullVersion),
+                    testRun1.EditorVersion.FullVersion,
+                    testRun2.EditorVersion.FullVersion);
+            }
+
+            if (testRun1.EditorVersion.Branch != testRun2.EditorVersion.Branch)
+            {
+                AddMismatchPlayerMetadata(
+                    ref EditorVersionResultFiles,
+                    MismatchedEditorVersionValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.EditorVersion.Branch),
+                    testRun1.EditorVersion.Branch,
+                    testRun2.EditorVersion.Branch);
+            }
+        }
+
+        private void AddMismatchPlayerMetadata(
             ref string[] infoResultFiles,
             Dictionary<string, Dictionary<string, string>> mismatchedPlayerValues,
             string firstTestRunResultPath,
@@ -92,101 +429,6 @@ namespace UnityPerformanceBenchmarkReporter
             {
                 Array.Resize(ref infoResultFiles, infoResultFiles.Length + 1);
                 infoResultFiles[infoResultFiles.Length - 1] = resultPath;
-            }
-        }
-
-        public void ValidatePlayerSettings(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
-        {
-            if (testRun1.PlayerSettings.AndroidMinimumSdkVersion != testRun2.PlayerSettings.AndroidMinimumSdkVersion)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.AndroidMinimumSdkVersion");
-            }
-            if (testRun1.PlayerSettings.AndroidTargetSdkVersion != testRun2.PlayerSettings.AndroidTargetSdkVersion)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.GraphicsDeviceName");
-            }
-            foreach (var enabledXrTarget in testRun1.PlayerSettings.EnabledXrTargets)
-            {
-                if (!testRun2.PlayerSettings.EnabledXrTargets.Contains(enabledXrTarget))
-                {
-                    WriteWarningMessage("Test results with mismatching PlayerSettings.EnabledXrTargets");  
-                }
-            }
-            if (testRun1.PlayerSettings.GpuSkinning != testRun2.PlayerSettings.GpuSkinning)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.GpuSkinning");
-            }
-            if (testRun1.PlayerSettings.GraphicsApi != testRun2.PlayerSettings.GraphicsApi)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.GraphicsApi");
-            }
-            if (testRun1.PlayerSettings.GraphicsJobs != testRun2.PlayerSettings.GraphicsJobs)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.GraphicsJobs");
-            }
-            if (testRun1.PlayerSettings.MtRendering != testRun2.PlayerSettings.MtRendering)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.MtRendering");
-            }
-            if (testRun1.PlayerSettings.RenderThreadingMode != testRun2.PlayerSettings.RenderThreadingMode)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.RenderThreadingMode");
-            }
-            if (testRun1.PlayerSettings.ScriptingBackend != testRun2.PlayerSettings.ScriptingBackend)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.ScriptingBackend");
-            }
-            if (testRun1.PlayerSettings.StereoRenderingPath != testRun2.PlayerSettings.StereoRenderingPath)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.StereoRenderingPath");
-            }
-            if (testRun1.PlayerSettings.VrSupported != testRun2.PlayerSettings.VrSupported)
-            {
-                WriteWarningMessage("Test results with mismatching PlayerSettings.VrSupported");
-            }
-        }
-
-        public void ValidateQualitySettings(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
-        {
-            if (testRun1.QualitySettings.AnisotropicFiltering != testRun2.QualitySettings.AnisotropicFiltering)
-            {
-                WriteWarningMessage("Test results with mismatching QualitySettings.AnisotropicFiltering");
-            }
-            if (testRun1.QualitySettings.AntiAliasing != testRun2.QualitySettings.AntiAliasing)
-            {
-                WriteWarningMessage("Test results with mismatching QualitySettings.AntiAliasing");
-            }
-            if (testRun1.QualitySettings.BlendWeights != testRun2.QualitySettings.BlendWeights)
-            {
-                WriteWarningMessage("Test results with mismatching QualitySettings.BlendWeights");
-            }
-            if (testRun1.QualitySettings.ColorSpace != testRun2.QualitySettings.ColorSpace)
-            {
-                WriteWarningMessage("Test results with mismatching QualitySettings.ColorSpace");
-            }
-            if (testRun1.QualitySettings.Vsync != testRun2.QualitySettings.Vsync)
-            {
-                WriteWarningMessage("Test results with mismatching QualitySettings.Vsync");
-            }
-        }
-
-        public void ValidateScreenSettings(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
-        {
-            if (testRun1.ScreenSettings.Fullscreen != testRun2.ScreenSettings.Fullscreen)
-            {
-                WriteWarningMessage("Test results with mismatching ScreenSettings.Fullscreen");
-            }
-            if (testRun1.ScreenSettings.ScreenHeight != testRun2.ScreenSettings.ScreenHeight)
-            {
-                WriteWarningMessage("Test results with mismatching ScreenSettings.ScreenHeight");
-            }
-            if (testRun1.ScreenSettings.ScreenRefreshRate != testRun2.ScreenSettings.ScreenRefreshRate)
-            {
-                WriteWarningMessage("Test results with mismatching ScreenSettings.ScreenRefreshRate");
-            }
-            if (testRun1.ScreenSettings.ScreenWidth != testRun2.ScreenSettings.ScreenWidth)
-            {
-                WriteWarningMessage("Test results with mismatching ScreenSettings.ScreenWidth");
             }
         }
 
@@ -233,16 +475,16 @@ namespace UnityPerformanceBenchmarkReporter
             WriteWarningMessage(sb.ToString());
         }
 
-        static int tableWidth = 100;
+        static int _tableWidth = 100;
 
-        static string GetLine()
+        private string GetLine()
         {
-            return string.Format("{0}\r\n", new string('-', tableWidth));
+            return string.Format("{0}\r\n", new string('-', _tableWidth));
         }
 
-        static string GetRow(params string[] columns)
+        private string GetRow(params string[] columns)
         {
-            int width = (tableWidth - columns.Length) / columns.Length;
+            int width = (_tableWidth - columns.Length) / columns.Length;
             string row = "|";
 
             foreach (string column in columns)
@@ -253,7 +495,7 @@ namespace UnityPerformanceBenchmarkReporter
             return string.Format("{0}\r\n", row);
         }
 
-        static string AlignCentre(string alignText, int width)
+        private string AlignCentre(string alignText, int width)
         {
             var text = alignText;
             if (text.Length > width)
@@ -263,8 +505,6 @@ namespace UnityPerformanceBenchmarkReporter
                 var substring = text.Substring(startIndex, length); 
                 text = "..." + substring;
             }
-            else
-                text = text;
 
             if (string.IsNullOrEmpty(text))
             {
@@ -274,6 +514,20 @@ namespace UnityPerformanceBenchmarkReporter
             {
                 return text.PadRight(width - (width - text.Length) / 2).PadLeft(width);
             }
+        }
+
+        public string ResizeString(string resizeText, int width)
+        {
+            var text = resizeText;
+            if (text.Length > width)
+            {
+                var startIndex = text.Length - width + 3;
+                var length = width - 3;
+                var substring = text.Substring(startIndex, length);
+                text = "..." + substring;
+            }
+
+            return text;
         }
     }
 }

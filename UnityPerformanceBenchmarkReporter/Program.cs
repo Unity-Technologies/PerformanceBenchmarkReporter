@@ -50,7 +50,7 @@ namespace UnityPerformanceBenchmarkReporter
             }
 
             var reportWriter = new ReportWriter();
-            reportWriter.WriteReport(aggregateTestRunResults, performanceBenchmark.SigFig, performanceBenchmark.ReportDirPath, performanceBenchmark.BaselineResultFilesExist);
+            reportWriter.WriteReport(aggregateTestRunResults, performanceBenchmark.MetadataValidator, performanceBenchmark.SigFig, performanceBenchmark.ReportDirPath, performanceBenchmark.BaselineResultFilesExist);
         }
     }
 }

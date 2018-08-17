@@ -16,12 +16,14 @@ namespace UnityPerformanceBenchmarkReporter
         public uint SigFig { get; private set; }
         public string ReportDirPath { get; set; }
 
+        public MetadataValidator MetadataValidator = new MetadataValidator();
+
         private bool firstResult = true;
         private string firstTestRunResultPath;
         private PerformanceTestRun firstTestRun = new PerformanceTestRun();
         private readonly PerformanceTestRunProcessor performanceTestRunProcessor = new PerformanceTestRunProcessor();
         private readonly string xmlFileExtension = ".xml";
-        
+
 
         public bool BaselineResultFilesExist => BaselineXmlFilePaths.Any() || BaselineXmlDirectoryPaths.Any();
 
@@ -32,7 +34,7 @@ namespace UnityPerformanceBenchmarkReporter
             // Default significant figures to use for non-integer metrics if user doesn't specify another value.
             // Most values are in milliseconds or a count of something, so using more often creates an artificial baseline
             // failure based on insignificant digits
-            SigFig = 0;
+            SigFig = 2;
         }
 
         public void AddPerformanceTestRunResults(
@@ -96,8 +98,8 @@ namespace UnityPerformanceBenchmarkReporter
                         ValidateMetadata(performanceTestRun, xmlFileNamePath);
                         runResults.Add(performanceTestRunProcessor.CreateTestRunResult
                             (
-                                firstTestRun,
-                                testResults,
+                                performanceTestRun,
+                                results,
                                 Path.GetFileNameWithoutExtension(xmlFileNamePath),
                                 isBaseline)
                         );
@@ -123,11 +125,12 @@ namespace UnityPerformanceBenchmarkReporter
             }
             else
             {
-                var metadataValidator = new MetadataValidator();
-                metadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
-                metadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
-                metadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
-                metadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidateBuildSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidateEditorVersion(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
             }
         }
 
