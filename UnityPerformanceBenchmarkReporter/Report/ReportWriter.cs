@@ -27,12 +27,14 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private readonly Regex illegalCharacterScrubberRegex = new Regex("[^0-9a-zA-Z]", RegexOptions.Compiled);
         private uint thisSigFig;
         private bool thisHasBenchmarkResults;
+        private MetadataValidator metadataValidator;
 
-        public void WriteReport(List<PerformanceTestRunResult> results, uint sigFig = 2,
+        public void WriteReport(List<PerformanceTestRunResult> results, MetadataValidator mdValidator, uint sigFig = 2,
             string reportDirectoryPath = null, bool hasBenchmarkResults = false)
         {
             if (results != null && results.Count > 0)
             {
+                metadataValidator = mdValidator;
                 thisSigFig = sigFig;
                 thisHasBenchmarkResults = hasBenchmarkResults;
                 EnsureOrderedResults(results);
@@ -644,43 +646,45 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
 
             if (firstResult.PlayerSystemInfo != null)
             {
-                WriteClassNameWithFields<PlayerSystemInfo>(rw, firstResult.PlayerSystemInfo);
+                WriteClassNameWithFields<PlayerSystemInfo>(rw, firstResult.PlayerSystemInfo, metadataValidator.PlayerSystemInfoResultFiles, metadataValidator.MismatchedPlayerSystemInfoValues);
             }
 
             if (firstResult.PlayerSettings != null)
             {
-                WriteClassNameWithFields<PlayerSettings>(rw, firstResult.PlayerSettings);
+                WriteClassNameWithFields<PlayerSettings>(rw, firstResult.PlayerSettings, metadataValidator.PlayerSettingsResultFiles, metadataValidator.MismatchedPlayerSettingsValues);
             }
 
             if (firstResult.QualitySettings != null)
             {
-                WriteClassNameWithFields<QualitySettings>(rw, firstResult.QualitySettings);
+                WriteClassNameWithFields<QualitySettings>(rw, firstResult.QualitySettings, metadataValidator.QualitySettingsResultFiles, metadataValidator.MismatchedQualitySettingsValues);
             }
 
             if (firstResult.ScreenSettings != null)
             {
-                WriteClassNameWithFields<ScreenSettings>(rw, firstResult.ScreenSettings);
+                WriteClassNameWithFields<ScreenSettings>(rw, firstResult.ScreenSettings, metadataValidator.ScreenSettingsResultFiles, metadataValidator.MismatchedScreenSettingsValues);
             }
 
             if (firstResult.BuildSettings != null)
             {
-                WriteClassNameWithFields<BuildSettings>(rw, firstResult.BuildSettings);
+                WriteClassNameWithFields<BuildSettings>(rw, firstResult.BuildSettings, metadataValidator.BuildSettingsResultFiles, metadataValidator.MismatchedBuildSettingsValues);
             }
 
             if (firstResult.EditorVersion != null)
             {
-                WriteClassNameWithFields<EditorVersion>(rw, firstResult.EditorVersion, new[] { "DateSeconds", "RevisionValue" });
+                WriteClassNameWithFields<EditorVersion>(rw, firstResult.EditorVersion, metadataValidator.EditorVersionResultFiles, metadataValidator.MismatchedEditorVersionValues, new[] { "DateSeconds", "RevisionValue" }, true);
             }
             
             rw.WriteLine("</div>");
             rw.WriteLine("</div>");
         }
 
-        private void WriteClassNameWithFields<T>(StreamWriter rw, object instance, string[] excludedFields = null)
+        private void WriteClassNameWithFields<T>(StreamWriter rw, object instance, string[] resultFiles,
+            Dictionary<string, Dictionary<string, string>> mismatchedValues, string[] excludedFields = null, bool wideLayout = false)
         {
             var thisObject = (T)instance;
             rw.WriteLine("<div><hr></div><div class=\"typename\">{0}</div><div><hr></div>", thisObject.GetType().Name);
-            rw.WriteLine("<div class=\"systeminfo\">");
+            rw.WriteLine(wideLayout ? "<div class=\"systeminfowide\">" : "<div class=\"systeminfo\">");
+
             var sb = new StringBuilder();
             foreach (var field in thisObject.GetType().GetFields())
             {
@@ -692,24 +696,50 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
                 // if field is an IEnumberable, enumerate and append each value to the sb
                 if (typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string))
                 {
-                    sb.Append(string.Format("<div><div class=\"fieldname\">{0}:</div><div class=\"fieldvalue\">", field.Name));
-                    foreach (var enumerable in (IEnumerable) field.GetValue(thisObject))
-                    {
-                        sb.Append(enumerable + ",");
-                    }
+                    sb.Append(string.Format("<div><div class=\"fieldname\"><pre>{0}</pre></div><div class=\"fieldvalue\"><pre>", field.Name));
 
-                    if (sb.ToString().EndsWith(','))
-                    {
-                        // trim trailing comma
-                        sb.Length--;
-                    }
+                    //if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
+                    //{
+                        foreach (var enumerable in (IEnumerable)field.GetValue(thisObject))
+                        {
+                            sb.Append(enumerable + ",");
+                        }
+
+                        if (sb.ToString().EndsWith(','))
+                        {
+                            // trim trailing comma
+                            sb.Length--;
+                        }
+                    //}
                     
-                    sb.Append("</div></div>");
+                    sb.Append("</pre></div></div>");
                 }
                 else
                 {
-                    sb.Append(string.Format("<div><div class=\"fieldname\">{0}:</div><div class=\"fieldvalue\">{1}</div></div>", field.Name, field.GetValue(thisObject)));
+                    sb.Append(string.Format("<div class=\"fieldgroup\"><div class=\"fieldname\"><pre>{0}</pre></div>", field.Name));
+                    if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
+                    {
+                        var mismatchedValue = mismatchedValues[field.Name];
 
+                        
+                        for (int i = 0; i < resultFiles.Length; i++)
+                        {
+                            sb.Append(string.Format("<div class=\"fieldvaluewarning\" title=\"{0}\"><pre>", resultFiles[i]));
+
+                            var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFiles[i])) ? 
+                                mismatchedValue.First(kv => kv.Key.Equals(resultFiles[i])).Value : 
+                                mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
+                            sb.Append(string.Format("|&nbsp;{0}:&nbsp;&nbsp;&nbsp;&nbsp;{1}&nbsp;|", metadataValidator.ResizeString(resultFiles[i], 20), value));
+
+                            sb.Append(i == resultFiles.Length - 1 ? "</pre></div >" : "</pre><br></div >");
+                        }
+                    }
+                    else
+                    {
+                        sb.Append(string.Format("<div class=\"fieldvalue\"><pre>{0}</pre></div>", field.GetValue(thisObject)));
+                    }
+
+                    sb.Append("</div>");
                 }
             }
             rw.WriteLine(sb.ToString());
