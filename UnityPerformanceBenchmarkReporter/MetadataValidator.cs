@@ -115,14 +115,28 @@ namespace UnityPerformanceBenchmarkReporter
                     testRun1.PlayerSettings.AndroidTargetSdkVersion,
                     testRun2.PlayerSettings.AndroidTargetSdkVersion);
             }
-            // TODO Refactor this to match all strings, not one by one
-            foreach (var enabledXrTarget in testRun1.PlayerSettings.EnabledXrTargets)
+
+            var srcEnabledXrTargetsString = 
+                testRun1.PlayerSettings.EnabledXrTargets != null && testRun1.PlayerSettings.EnabledXrTargets.Any() ? 
+                    string.Join(',', testRun1.PlayerSettings.EnabledXrTargets.ToArray()) : 
+                    string.Empty;
+            var targetEnabledXrTargetsString = 
+                testRun2.PlayerSettings.EnabledXrTargets != null && testRun2.PlayerSettings.EnabledXrTargets.Any() ? 
+                    string.Join(',', testRun2.PlayerSettings.EnabledXrTargets.ToArray()) : 
+                    string.Empty;
+
+            if (srcEnabledXrTargetsString != targetEnabledXrTargetsString)
             {
-                if (!testRun2.PlayerSettings.EnabledXrTargets.Contains(enabledXrTarget))
-                {
-                    WriteWarningMessage("Test results with mismatching PlayerSettings.EnabledXrTargets");  
-                }
+                AddMismatchPlayerMetadata(
+                    ref PlayerSettingsResultFiles,
+                    MismatchedPlayerSettingsValues,
+                    firstTestRunResultPath,
+                    xmlFileNamePath,
+                    nameof(testRun1.PlayerSettings.EnabledXrTargets),
+                    srcEnabledXrTargetsString,
+                    targetEnabledXrTargetsString);
             }
+
             if (testRun1.PlayerSettings.GpuSkinning != testRun2.PlayerSettings.GpuSkinning)
             {
                 AddMismatchPlayerMetadata(

@@ -695,65 +695,67 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
                 }
                 sb.Append("<div class=\"fieldgroup\">");
 
-                // if field is an IEnumberable, enumerate and append each value to the sb
-                if (typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string))
+                sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
+                if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
                 {
-                    sb.Append(string.Format("<div><div class=\"fieldname\"><pre>{0}</pre></div><div class=\"fieldvalue\"><pre>", field.Name));
+                    var mismatchedValue = mismatchedValues[field.Name];
 
-                    //if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
-                    //{
-                        foreach (var enumerable in (IEnumerable)field.GetValue(thisObject))
-                        {
-                            sb.Append(enumerable + ",");
-                        }
+                    sb.Append("<div class=\"fieldvaluewarning\">");
+                    sb.Append("<table class=\"warningtable\">");
+                    sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
 
-                        if (sb.ToString().EndsWith(','))
-                        {
-                            // trim trailing comma
-                            sb.Length--;
-                        }
-                    //}
-                    
-                    sb.Append("</pre></div></div>");
+                    for (int i = 0; i < resultFiles.Length; i++)
+                    {
+
+                        var resultFile = resultFiles[i];
+                        var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFile)) ?
+                            mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value :
+                            mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
+
+                        var pathParts = resultFile.Split('\\');
+                        var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
+
+                        sb.Append(string.Format("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>", value, pathParts[pathParts.Length - 1], path));
+                    }
+
+                    sb.Append("</table></div>");
                 }
                 else
                 {
-                    sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
-                    if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
-                    {
-                        var mismatchedValue = mismatchedValues[field.Name];
-
-                        sb.Append("<div class=\"fieldvaluewarning\">");
-                        sb.Append("<table class=\"warningtable\">");
-                        sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
-                        
-                        for (int i = 0; i < resultFiles.Length; i++)
-                        {
-                            
-                            var resultFile = resultFiles[i];
-                            var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFile)) ? 
-                                mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value : 
-                                mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
-
-                            var pathParts = resultFile.Split('\\');
-                            var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
-
-                            sb.Append(string.Format("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>", value, pathParts[pathParts.Length - 1], path));
-                        }
-                        
-                        sb.Append("</table></div>");
-                    }
-                    else
-                    {
-                        sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>", field.GetValue(thisObject)));
-                    }
-
-                    
+                    sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>", GetFieldValues(field, thisObject)));
                 }
+               
                 sb.Append("</div>");
             }
             rw.WriteLine(sb.ToString());
             rw.WriteLine("</pre></div>");
+        }
+
+        private object GetFieldValues<T>(FieldInfo field, T thisObject)
+        {
+            return IsIEnumerableFieldType<T>(field) ? ConvertIEnumberableToString(field, thisObject) : field.GetValue(thisObject);
+        }
+
+        private static bool IsIEnumerableFieldType<T>(FieldInfo field)
+        {
+            return typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string);
+        }
+
+        private string ConvertIEnumberableToString<T>(FieldInfo field, T thisObject)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var enumerable in (IEnumerable) field.GetValue(thisObject))
+            {
+                sb.Append(enumerable + ",");
+            }
+
+            if (sb.ToString().EndsWith(','))
+            {
+                // trim trailing comma
+                sb.Length--;
+            }
+
+            return sb.ToString();
         }
 
         private List<TestResult> GetResultsForThisTest(string distinctTestName)
