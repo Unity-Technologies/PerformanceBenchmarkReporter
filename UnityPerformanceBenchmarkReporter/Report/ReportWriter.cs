@@ -407,7 +407,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             rw.WriteLine("function showTestConfiguration() {");
             rw.WriteLine("	var x = document.getElementById(\"testconfig\");");
-            rw.WriteLine("	if (x.style.display === \"none\") {");
+            rw.WriteLine("	if (x.style.display === \"\" || x.style.display === \"none\") {");
             rw.WriteLine("		x.style.display = \"block\";");
 rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Hide Test Configuration\";");
             rw.WriteLine("	} else {");
@@ -683,15 +683,17 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
         {
             var thisObject = (T)instance;
             rw.WriteLine("<div><hr></div><div class=\"typename\">{0}</div><div><hr></div>", thisObject.GetType().Name);
-            rw.WriteLine(wideLayout ? "<div class=\"systeminfowide\">" : "<div class=\"systeminfo\">");
+            rw.WriteLine(wideLayout ? "<div class=\"systeminfowide\"><pre>" : "<div class=\"systeminfo\"><pre>");
 
             var sb = new StringBuilder();
             foreach (var field in thisObject.GetType().GetFields())
             {
+                
                 if (excludedFields != null && excludedFields.Contains(field.Name))
                 {
                     continue;
                 }
+                sb.Append("<div class=\"fieldgroup\">");
 
                 // if field is an IEnumberable, enumerate and append each value to the sb
                 if (typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string))
@@ -716,34 +718,42 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
                 }
                 else
                 {
-                    sb.Append(string.Format("<div class=\"fieldgroup\"><div class=\"fieldname\"><pre>{0}</pre></div>", field.Name));
+                    sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
                     if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
                     {
                         var mismatchedValue = mismatchedValues[field.Name];
 
+                        sb.Append("<div class=\"fieldvaluewarning\">");
+                        sb.Append("<table class=\"warningtable\">");
+                        sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
                         
                         for (int i = 0; i < resultFiles.Length; i++)
                         {
-                            sb.Append(string.Format("<div class=\"fieldvaluewarning\" title=\"{0}\"><pre>", resultFiles[i]));
-
-                            var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFiles[i])) ? 
-                                mismatchedValue.First(kv => kv.Key.Equals(resultFiles[i])).Value : 
+                            
+                            var resultFile = resultFiles[i];
+                            var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFile)) ? 
+                                mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value : 
                                 mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
-                            sb.Append(string.Format("|&nbsp;{0}:&nbsp;&nbsp;&nbsp;&nbsp;{1}&nbsp;|", metadataValidator.ResizeString(resultFiles[i], 20), value));
 
-                            sb.Append(i == resultFiles.Length - 1 ? "</pre></div >" : "</pre><br></div >");
+                            var pathParts = resultFile.Split('\\');
+                            var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
+
+                            sb.Append(string.Format("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>", value, pathParts[pathParts.Length - 1], path));
                         }
+                        
+                        sb.Append("</table></div>");
                     }
                     else
                     {
-                        sb.Append(string.Format("<div class=\"fieldvalue\"><pre>{0}</pre></div>", field.GetValue(thisObject)));
+                        sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>", field.GetValue(thisObject)));
                     }
 
-                    sb.Append("</div>");
+                    
                 }
+                sb.Append("</div>");
             }
             rw.WriteLine(sb.ToString());
-            rw.WriteLine("</div>");
+            rw.WriteLine("</pre></div>");
         }
 
         private List<TestResult> GetResultsForThisTest(string distinctTestName)

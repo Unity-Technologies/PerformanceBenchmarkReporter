@@ -50,25 +50,7 @@ h3 {
     display: none
 }
 
-.systeminfo > div {
-    display: inline-block;
-    *display: inline; /* For IE7 */
-    zoom: 1; /* Trigger hasLayout */
-    width: 20%;
-    text-align: left;
-    vertical-align: text-top;
-    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
-}
 
-.systeminfowide > div {
-    display: inline-block;
-    *display: inline; /* For IE7 */
-    zoom: 1; /* Trigger hasLayout */
-    width: 50%;
-    text-align: left;
-    vertical-align: text-top;
-    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
-}
 
 .testnamecell {
     background-color: lightgray;
@@ -102,9 +84,9 @@ h3 {
     font-weight: bold;
 }
 
-    .button:hover {
-        background-color: #2196F3 !important;
-    }
+.button:hover {
+    background-color: #2196F3 !important;
+}
 
 .buttondiv {
     display: inline;
@@ -125,33 +107,65 @@ h3 {
     padding: 5px 5px 5px 0px;
 }
 
+
+.systeminfo > div {
+    flex: 1 1 160px;
+    margin: 5px;
+}
+
+.systeminfowide > div {
+    flex: 1 1 160px;
+    margin: 5px;
+}
+
 .typename {
     text-align: left;
     font-weight: bold;
-    font-size: 1.25vh;
-    background-color: black;
-    color: white;
+    font-size: 1.35vh;
+    background-color: lightgray;
+    color: black;
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
     padding: 5px 5px 5px 10px;
 }
 
 .fieldgroup {
+    display: inline-block !important;
+    border: 1px solid lightgray;
+    border-radius: 4px;
+    margin: 5px;
 }
 
 .fieldname {
     font-weight: bold;
-    font-size: 1.15vh;
+    font-size: 1.25vh;
     overflow-wrap: break-word;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    margin: 4px;
 }
 
 .fieldvalue {
-    font-size: 1vh;
+    font-size: 1.1vh;
+    margin: 4px;
 }
 
 .fieldvaluewarning {
-    font-size: 1vh;
-    color: darkorange;
+    font-size: 1.1vh;
+    color: chocolate;
 }
+
+.warningtable {
+    padding: 5px 5px 5px 5px;
+    width: 100%;
+    text-align: left;
+}
+
+.warningtable > tbody > tr > td {
+    padding: 5px;
+}
+
+    .warningtable > tbody > tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
 
 pre {
     white-space: pre-wrap; /* Since CSS 2.1 */
@@ -159,6 +173,7 @@ pre {
     white-space: -pre-wrap; /* Opera 4-6 */
     white-space: -o-pre-wrap; /* Opera 7 */
     word-wrap: break-word; /* Internet Explorer 5.5+ */
+    margin: 5px;
 }
 
 .containerLabel {
@@ -176,12 +191,12 @@ pre {
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
 }
 
-    /* Hide the browser's default checkbox */
-    .containerLabel input {
-        position: absolute;
-        opacity: 0;
-        cursor: pointer;
-    }
+/* Hide the browser's default checkbox */
+.containerLabel input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
 
 /* Create a custom checkbox */
 .checkmark {
@@ -246,31 +261,31 @@ pre {
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
 }
 
-    /* Hide the browser's default checkbox */
-    .disabledContainerLabel input {
-        position: absolute;
-        opacity: 0;
-        cursor: pointer;
-    }
+/* Hide the browser's default checkbox */
+.disabledContainerLabel input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
 
-    .disabledContainerLabel .tooltiptext {
-        visibility: hidden;
-        width: 120px;
-        background-color: #2196F3;
-        color: #fff;
-        text-align: center;
-        border-radius: 6px;
-        padding: 5px 0;
-        z-index: 1;
-        top: -5px;
-        left: 105%;
-        padding: 5px 5px 5px 5px;
-        font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
-    }
+.disabledContainerLabel .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #2196F3;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    z-index: 1;
+    top: -5px;
+    left: 105%;
+    padding: 5px 5px 5px 5px;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+}
 
-    .disabledContainerLabel:hover .tooltiptext {
-        visibility: visible;
-    }
+.disabledContainerLabel:hover .tooltiptext {
+    visibility: visible;
+}
 
 .visualizationTable {
     width: 100%;
