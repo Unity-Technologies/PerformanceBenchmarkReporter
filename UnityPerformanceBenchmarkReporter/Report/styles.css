@@ -17,6 +17,10 @@ th {
     border-bottom-color: lightgray;
 }
 
+.targetvalue {
+    color: black !important;
+}
+
 .titletable {
     height: 80%;
     width: 100%;
@@ -99,7 +103,7 @@ th {
 div > .configwarning {
     visibility: hidden;
     width: 120px;
-    background-color: #F9A625;
+    background-color: #f28034;
     color: white;
     text-align: center;
     border-radius: 6px;
@@ -164,7 +168,7 @@ div:hover > .configwarning {
     text-align: left;
     font-weight: bold;
     font-size: 1.35vh;
-    background-color: #F9A625;
+    background-color: #f28034;
     color: white;
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
     padding: 5px 5px 5px 10px;
@@ -179,7 +183,7 @@ div:hover > .configwarning {
 
 .fieldgroupwarning {
     display: inline-block !important;
-    border: 1px solid #F9A625;
+    border: 1px solid #f28034;
     border-radius: 4px;
     margin: 5px;
 }
@@ -193,7 +197,7 @@ div:hover > .configwarning {
 }
 
 .fieldnamewarning {
-    background-color: #F9A625;
+    background-color: #f28034;
     color: white;
     font-weight: bold;
     font-size: 1.25vh;
@@ -209,7 +213,7 @@ div:hover > .configwarning {
 
 .fieldvaluewarning {
     font-size: 1.1vh;
-    color: #F9A625;
+    color: #f28034;
 }
 
 .warningtable {

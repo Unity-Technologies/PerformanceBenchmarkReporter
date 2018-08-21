@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityPerformanceBenchmarkReporter.Entities;
 
 namespace UnityPerformanceBenchmarkReporter
@@ -451,104 +450,6 @@ namespace UnityPerformanceBenchmarkReporter
                 Array.Resize(ref infoResultFiles, infoResultFiles.Length + 1);
                 infoResultFiles[infoResultFiles.Length - 1] = resultPath;
             }
-        }
-
-        private void WriteWarningMessage(string msg)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(msg);
-            Console.ResetColor();
-        }
-
-        private void WriteWarningMessage(string msg, string[] playerResultFiles, Dictionary<string, Dictionary<string, string>> mismatchedPlayerValues)
-        {
-            var sb = new StringBuilder();
-
-            sb.Append(msg + "\r\n");
-            sb.Append(GetLine());
-            var tableHeader = new string[playerResultFiles.Length + 1];
-            tableHeader[0] = "Name";
-            playerResultFiles.CopyTo(tableHeader, 1);
-            sb.Append(GetRow(tableHeader));
-            sb.Append(GetLine());
-
-            foreach (var mismatchPlayerValue in mismatchedPlayerValues)
-            {
-                string [] rowData = new string[tableHeader.Length];
-                rowData[0] = mismatchPlayerValue.Key;
-
-                for (int i = 0; i < playerResultFiles.Length; i++)
-                {
-                    if (mismatchPlayerValue.Value.Any(v => v.Key.Equals(playerResultFiles[i])))
-                    {
-                        rowData[i + 1] = mismatchPlayerValue.Value.First(v => v.Key.Equals(playerResultFiles[i])).Value;
-                    }
-                    else
-                    {
-                        rowData[i + 1] = string.Empty;
-                    }
-                }
-
-                sb.Append(GetRow(rowData));
-            }
-
-            sb.Append(GetLine());
-            WriteWarningMessage(sb.ToString());
-        }
-
-        static int _tableWidth = 100;
-
-        private string GetLine()
-        {
-            return string.Format("{0}\r\n", new string('-', _tableWidth));
-        }
-
-        private string GetRow(params string[] columns)
-        {
-            int width = (_tableWidth - columns.Length) / columns.Length;
-            string row = "|";
-
-            foreach (string column in columns)
-            {
-                row += AlignCentre(column, width) + "|";
-            }
-
-            return string.Format("{0}\r\n", row);
-        }
-
-        private string AlignCentre(string alignText, int width)
-        {
-            var text = alignText;
-            if (text.Length > width)
-            {
-                var startIndex = text.Length - width + 3;
-                var length = width - 3;
-                var substring = text.Substring(startIndex, length); 
-                text = "..." + substring;
-            }
-
-            if (string.IsNullOrEmpty(text))
-            {
-                return new string(' ', width);
-            }
-            else
-            {
-                return text.PadRight(width - (width - text.Length) / 2).PadLeft(width);
-            }
-        }
-
-        public string ResizeString(string resizeText, int width)
-        {
-            var text = resizeText;
-            if (text.Length > width)
-            {
-                var startIndex = text.Length - width + 3;
-                var length = width - 3;
-                var substring = text.Substring(startIndex, length);
-                text = "..." + substring;
-            }
-
-            return text;
         }
     }
 }

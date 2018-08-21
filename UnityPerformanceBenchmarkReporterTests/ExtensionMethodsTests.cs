@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using UnityPerformanceBenchmarkReporter;
-using UnityPerformanceBenchmarkReporter.Entities;
-using UnityPerformanceBenchmarkReporter.Report;
 
 namespace UnityPerformanceBenchmarkReporterTests
 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Options;
 
@@ -7,10 +8,10 @@ namespace UnityPerformanceBenchmarkReporter
     public class OptionsParser
     {
         private bool help;
-        private readonly string about = "The Unity Performance Benchmark Reporter enables the comparison of performance metric baselines and subsequent performance metrics (as generated using the Unity Test Runner with the Unity Performance Testing Extension package) in an html report utilizing graphical visualizations.";
+        private readonly string about = "The Unity Performance Benchmark Reporter enables the comparison of performance metric baselines and subsequent performance metrics (as generated using the Unity Test Runner with the Unity Performance Testing Extension) in an html report utilizing graphical visualizations.";
 
         private readonly string learnMore =
-            "To learn more about the Unity Performance Benchmark Reporter visit the Unity PerformanceBenchmark GitHub wiki at https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki.";
+            "To learn more about the Unity Performance Benchmark Reporter visit the Unity Performance Benchmark Reporter GitHub wiki at https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki.";
 
         private string sigFigString;
 
@@ -20,7 +21,7 @@ namespace UnityPerformanceBenchmarkReporter
             Baseline
         }
 
-        public void ParseOptions(PerformanceBenchmark performanceBenchmark, string[] args)
+        public void ParseOptions(PerformanceBenchmark performanceBenchmark, IEnumerable<string> args)
         {
             var os = GetOptions(performanceBenchmark);
 
@@ -37,7 +38,7 @@ namespace UnityPerformanceBenchmarkReporter
                 {
                     try
                     {
-                        var sigFig = System.Convert.ToUInt32(sigFigString);
+                        var sigFig = Convert.ToUInt32(sigFigString);
                         performanceBenchmark.AddSigFig(sigFig);
                     }
                     catch (Exception)
@@ -79,7 +80,7 @@ namespace UnityPerformanceBenchmarkReporter
                         })
                 .Add("reportdirpath:", "OPTIONAL - Path to directory where the UnityPerformanceBenchmark report will be written. Default is current working directory.",
                     performanceBenchmark.AddReportDirPath)
-                .Add("sigfig:", "OPTIONAL - Specify the number of significant figures to use when collecting and calculating thresholds and failures for non-integer based metrics (from the profiler, Camer.Render CPU time in milliseconds, for example). This value must be an integer >= 0.",
+                .Add("sigfig:", "OPTIONAL - Specify the number of significant figures to use when collecting and calculating thresholds and failures for non-integer based metrics (from the profiler, Camer.Render CPU time in milliseconds, for example). This value must be an integer >= 0. Default is 3.",
                     option =>
                     {
                         if (option != null)

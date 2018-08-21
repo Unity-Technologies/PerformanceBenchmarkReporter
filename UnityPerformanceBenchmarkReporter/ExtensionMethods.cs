@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace UnityPerformanceBenchmarkReporter
 {
@@ -14,7 +15,7 @@ namespace UnityPerformanceBenchmarkReporter
             }
             else
             {
-                var s = Convert.ToString(d);
+                var s = Convert.ToString(d, CultureInfo.InvariantCulture);
                 var parts = s.Split('.');
                 if (parts.Length <= 1 || parts[1].Length <= digits)
                 {

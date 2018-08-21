@@ -174,17 +174,13 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private static void WriteStatMethodButtons(StreamWriter streamWriter)
         {
-            streamWriter.WriteLine("<tr><td>");
-            streamWriter.WriteLine("<div class=\"buttonheader\">Select statistical method</div>");
             streamWriter.WriteLine(
-                "<div class=\"buttondiv\"><button id=\"MinButton\" class=\"button\">Min</button></div>&nbsp<div class=\"buttondiv\"><button id=\"MaxButton\" class=\"button\">Max</button></div>&nbsp<div class=\"buttondiv\"><button id=\"MedianButton\" class=\"initialbutton\">Median</button></div>&nbsp<div class=\"buttondiv\"><button id=\"AverageButton\" class=\"button\">Average</button></div>");
-            streamWriter.WriteLine("</td></tr>");
+                "<tr><td><div class=\"buttonheader\">Select statistical method</div><div class=\"buttondiv\"><button id=\"MinButton\" class=\"button\">Min</button></div>&nbsp<div class=\"buttondiv\"><button id=\"MaxButton\" class=\"button\">Max</button></div>&nbsp<div class=\"buttondiv\"><button id=\"MedianButton\" class=\"initialbutton\">Median</button></div>&nbsp<div class=\"buttondiv\"><button id=\"AverageButton\" class=\"button\">Average</button></div></td></tr>");
         }
 
         private void WriteShowFailedTestsCheckbox(StreamWriter streamWriter)
         {
-            streamWriter.WriteLine("<tr><td>");
-            streamWriter.WriteLine("<div class=\"showedfailedtests\">");
+            streamWriter.WriteLine("<tr><td><div class=\"showedfailedtests\">");
             if (thisHasBenchmarkResults)
             {
                 streamWriter.WriteLine("<label id=\"hidefailed\" class=\"containerLabel\">Show failed tests only");
@@ -197,10 +193,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     "<span class=\"tooltiptext\">No failed tests to show because there are no baseline results.</span>");
                 streamWriter.WriteLine("<input type=\"checkbox\" disabled>");
             }
-            streamWriter.WriteLine("<span class=\"checkmark\"></span>");
-            streamWriter.WriteLine("</label>");
-            streamWriter.WriteLine("</div");
-            streamWriter.WriteLine("</td></tr>");
+            streamWriter.WriteLine("<span class=\"checkmark\"></span></label></div></td></tr>");
         }
 
         private bool TestRunSettingsExist()
@@ -216,14 +209,15 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private void WriteShowTestConfigButton(StreamWriter rw)
         {
-            if (metadataValidator.MismatchesExist)
-            {
-                rw.WriteLine("<div><button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\"><image class=\"warning\" src=\"warning.png\"></img>Show Test Configuration</button><span class=\"configwarning\">Mismatched test configurations present</span></div>");
-            }
-            else
-            {
-                rw.WriteLine("<button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">Show Test Configuration<br></button>");
-            }
+
+            rw.WriteLine(
+                "<div><button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">{0}Show Test Configuration</button>{1}</div>",
+                metadataValidator.MismatchesExist
+                    ? "<image class=\"warning\" src=\"warning.png\"></img>"
+                    : string.Empty,
+                metadataValidator.MismatchesExist
+                    ? "<span class=\"configwarning\">Mismatched test configurations present</span>"
+                    : string.Empty);
         }
 
         private void WriteJavaScript(StreamWriter rw)
@@ -496,13 +490,13 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
             foreach (var distinctSampleGroupName in distinctSampleGroupNames)
             {
-                WriteResultForThisSampleGroup(rw, distinctTestName, resultsForThisTest, distinctSampleGroupName, noTestRegressions);
+                WriteResultForThisSampleGroup(rw, distinctTestName, resultsForThisTest, distinctSampleGroupName);
             }
         }
 
         private void WriteResultForThisSampleGroup(StreamWriter rw, string distinctTestName,
             List<TestResult> resultsForThisTest,
-            string distinctSampleGroupName, bool noTestRegressions)
+            string distinctSampleGroupName)
         {
             if (!SampleGroupHasSamples(resultsForThisTest, distinctSampleGroupName))
             {
@@ -525,7 +519,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private bool IsNoTestFailures(List<TestResult> resultsForThisTest)
         {
-            bool noTestFailures = true;
+            var noTestFailures = true;
             foreach (var distinctSampleGroupName2 in distinctSampleGroupNames)
             {
                 if (!SampleGroupHasSamples(resultsForThisTest, distinctSampleGroupName2)) continue;
@@ -718,18 +712,25 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     sb.Append("<table class=\"warningtable\">");
                     sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
 
-                    for (int i = 0; i < resultFiles.Length; i++)
+                    var baselineValue = string.Empty;
+                    for (var i = 0; i < resultFiles.Length; i++)
                     {
+                        if (i == 0)
+                        {
+                            baselineValue = mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
+                        }
+                         
 
                         var resultFile = resultFiles[i];
                         var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFile)) ?
                             mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value :
-                            mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
+                            baselineValue;
 
                         var pathParts = resultFile.Split('\\');
                         var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
 
-                        sb.Append(string.Format("<tr><td>{0}</td><td>{1}</td><td>{2}</td></tr>", value, pathParts[pathParts.Length - 1], path));
+                        
+                        sb.Append(string.Format("<tr title={4}><td {0}>{1}</td><td {0}>{2}</td><td {0}>{3}</td></tr>", value.Equals(baselineValue) ? "class=\"targetvalue\"" : string.Empty, value, pathParts[pathParts.Length - 1], path, value.Equals(baselineValue) ? "\"Baseline configuration\"" : "\"Mismatched configuration\""));
                     }
 
                     sb.Append("</table></div>");
@@ -756,17 +757,17 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private object GetFieldValues<T>(FieldInfo field, T thisObject)
         {
-            return IsIEnumerableFieldType<T>(field) ? ConvertIEnumberableToString(field, thisObject) : field.GetValue(thisObject);
+            return IsIEnumerableFieldType(field) ? ConvertIEnumberableToString(field, thisObject) : field.GetValue(thisObject);
         }
 
-        private static bool IsIEnumerableFieldType<T>(FieldInfo field)
+        private static bool IsIEnumerableFieldType(FieldInfo field)
         {
             return typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string);
         }
 
         private string ConvertIEnumberableToString<T>(FieldInfo field, T thisObject)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             foreach (var enumerable in (IEnumerable) field.GetValue(thisObject))
             {
                 sb.Append(enumerable + ",");

@@ -14,9 +14,9 @@ namespace UnityPerformanceBenchmarkReporter
         public HashSet<string> BaselineXmlFilePaths { get; } = new HashSet<string>();
         public HashSet<string> BaselineXmlDirectoryPaths { get; } = new HashSet<string>();
         public uint SigFig { get; private set; }
-        public string ReportDirPath { get; set; }
+        public string ReportDirPath { get; private set; }
 
-        public MetadataValidator MetadataValidator = new MetadataValidator();
+        public readonly MetadataValidator MetadataValidator = new MetadataValidator();
 
         private bool firstResult = true;
         private string firstTestRunResultPath;
@@ -33,8 +33,9 @@ namespace UnityPerformanceBenchmarkReporter
         {
             // Default significant figures to use for non-integer metrics if user doesn't specify another value.
             // Most values are in milliseconds or a count of something, so using more often creates an artificial baseline
-            // failure based on insignificant digits
-            SigFig = 2;
+            // failure based on insignificant digits equating to a microsecond, or less, time difference. The Unity Profiler only shows
+            // up to three significant figures for milliseconds as well.
+            SigFig = 3;
         }
 
         public void AddPerformanceTestRunResults(
@@ -78,7 +79,7 @@ namespace UnityPerformanceBenchmarkReporter
 
             if (xmlFileNamePaths.Any())
             {
-                List<KeyValuePair<string, PerformanceTestRun>> perfTestRuns = new List<KeyValuePair<string, PerformanceTestRun>>();
+                var perfTestRuns = new List<KeyValuePair<string, PerformanceTestRun>>();
 
                 foreach (var xmlFileNamePath in xmlFileNamePaths)
                 {
@@ -92,7 +93,7 @@ namespace UnityPerformanceBenchmarkReporter
                 perfTestRuns.Sort((run1, run2) => run1.Value.StartTime.CompareTo(run2.Value.StartTime));
                 var resultFilesOrderByStartTime = perfTestRuns.ToArray();
 
-                for (int i = 0; i < resultFilesOrderByStartTime.Length; i++)
+                for (var i = 0; i < resultFilesOrderByStartTime.Length; i++)
                 {
                     var performanceTestRun = testResultXmlParser.GetPerformanceTestRunFromXml(resultFilesOrderByStartTime[i].Key);
 
