@@ -12,6 +12,11 @@ h3 {
     overflow-wrap: break-word;
 }
 
+th {
+    border-bottom-style: solid;
+    border-bottom-color: lightgray;
+}
+
 .titletable {
     height: 80%;
     width: 100%;
@@ -27,6 +32,13 @@ h3 {
     width: 30%;
     vertical-align: bottom;
     max-width: 400px;
+}
+
+.warning {
+    width: 2vh;
+    vertical-align: middle;
+    max-width: 200px;
+    margin: 5px;
 }
 
 .titlecell {
@@ -84,6 +96,26 @@ h3 {
     font-weight: bold;
 }
 
+div > .configwarning {
+    visibility: hidden;
+    width: 120px;
+    background-color: #F9A625;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    z-index: 1;
+    top: -5px;
+    left: 105%;
+    padding: 5px 5px 5px 5px;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    margin: 5px;
+}
+
+div:hover > .configwarning {
+    visibility: visible;
+}
+
+
 .button:hover {
     background-color: #2196F3 !important;
 }
@@ -128,6 +160,16 @@ h3 {
     padding: 5px 5px 5px 10px;
 }
 
+.typenamewarning {
+    text-align: left;
+    font-weight: bold;
+    font-size: 1.35vh;
+    background-color: #F9A625;
+    color: white;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    padding: 5px 5px 5px 10px;
+}
+
 .fieldgroup {
     display: inline-block !important;
     border: 1px solid lightgray;
@@ -135,7 +177,24 @@ h3 {
     margin: 5px;
 }
 
+.fieldgroupwarning {
+    display: inline-block !important;
+    border: 1px solid #F9A625;
+    border-radius: 4px;
+    margin: 5px;
+}
+
 .fieldname {
+    font-weight: bold;
+    font-size: 1.25vh;
+    overflow-wrap: break-word;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    margin: 4px;
+}
+
+.fieldnamewarning {
+    background-color: #F9A625;
+    color: white;
     font-weight: bold;
     font-size: 1.25vh;
     overflow-wrap: break-word;
@@ -150,7 +209,7 @@ h3 {
 
 .fieldvaluewarning {
     font-size: 1.1vh;
-    color: chocolate;
+    color: #F9A625;
 }
 
 .warningtable {
@@ -159,9 +218,9 @@ h3 {
     text-align: left;
 }
 
-.warningtable > tbody > tr > td {
-    padding: 5px;
-}
+    .warningtable > tbody > tr > td {
+        padding: 5px;
+    }
 
     .warningtable > tbody > tr:nth-child(even) {
         background-color: #f2f2f2;
@@ -191,12 +250,12 @@ pre {
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
 }
 
-/* Hide the browser's default checkbox */
-.containerLabel input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-}
+    /* Hide the browser's default checkbox */
+    .containerLabel input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
 
 /* Create a custom checkbox */
 .checkmark {
@@ -261,31 +320,31 @@ pre {
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
 }
 
-/* Hide the browser's default checkbox */
-.disabledContainerLabel input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-}
+    /* Hide the browser's default checkbox */
+    .disabledContainerLabel input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
 
-.disabledContainerLabel .tooltiptext {
-    visibility: hidden;
-    width: 120px;
-    background-color: #2196F3;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
-    z-index: 1;
-    top: -5px;
-    left: 105%;
-    padding: 5px 5px 5px 5px;
-    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
-}
+    .disabledContainerLabel .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: #2196F3;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        z-index: 1;
+        top: -5px;
+        left: 105%;
+        padding: 5px 5px 5px 5px;
+        font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    }
 
-.disabledContainerLabel:hover .tooltiptext {
-    visibility: visible;
-}
+    .disabledContainerLabel:hover .tooltiptext {
+        visibility: visible;
+    }
 
 .visualizationTable {
     width: 100%;

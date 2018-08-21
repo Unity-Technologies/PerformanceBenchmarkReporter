@@ -18,7 +18,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             "Chart.bundle.js",
             "styles.css",
-            "UnityLogo.png"
+            "UnityLogo.png",
+            "warning.png"
         };
 
         private List<string> distinctTestNames;
@@ -215,7 +216,14 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private void WriteShowTestConfigButton(StreamWriter rw)
         {
-            rw.WriteLine("<button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">Show Test Configuration</button>");
+            if (metadataValidator.MismatchesExist)
+            {
+                rw.WriteLine("<div><button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\"><image class=\"warning\" src=\"warning.png\"></img>Show Test Configuration</button><span class=\"configwarning\">Mismatched test configurations present</span></div>");
+            }
+            else
+            {
+                rw.WriteLine("<button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">Show Test Configuration<br></button>");
+            }
         }
 
         private void WriteJavaScript(StreamWriter rw)
@@ -225,7 +233,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("var passColor = \"rgba(54, 162, 235,0.5)\";");
             rw.WriteLine("var baselineColor = \"rgb(255, 159, 64)\";");
 
-            WriteShowTestConfigurationButton(rw);
+            WriteShowTestConfigurationOnClickEvent(rw);
             WriteToggleCanvasWithNoFailures(rw);
 
             WriteTestRunArray(rw);
@@ -357,6 +365,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             var aggregationType = GetAggregationType(resultsForThisTest, distinctSampleGroupName);
             var sampleUnit = GetSampleUnit(resultsForThisTest, distinctSampleGroupName);
             var threshold = GetThreshold(resultsForThisTest, distinctSampleGroupName);
+            var sampleCount = GetSampleCount(resultsForThisTest, distinctSampleGroupName);
             var canvasId = GetCanvasId(distinctTestName, distinctSampleGroupName);
 
             rw.WriteLine("	var ctx{0} = document.getElementById('{0}').getContext('2d');", canvasId);
@@ -371,7 +380,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("    {");
             rw.WriteLine("        footer: function(tooltipItems, data) {");
             rw.WriteLine("		var std = {0}_Stdev_Values[tooltipItems[0].index];", canvasId);
-            rw.WriteLine("            return 'Threshold: " + threshold + " Standard deviation: ' + std;");
+            rw.WriteLine("            return 'Threshold: {0} Standard deviation: ' + std + ' Sample count: {1}';", threshold, sampleCount);
             rw.WriteLine("        },");
             rw.WriteLine("   },");
             rw.WriteLine("    footerFontStyle: 'normal'");
@@ -403,16 +412,19 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("	");
         }
 
-        private void WriteShowTestConfigurationButton(StreamWriter rw)
+        private void WriteShowTestConfigurationOnClickEvent(StreamWriter rw)
         {
             rw.WriteLine("function showTestConfiguration() {");
             rw.WriteLine("	var x = document.getElementById(\"testconfig\");");
+            rw.WriteLine("	var t = document.getElementById(\"toggleconfig\");");
+            rw.WriteLine("	var img = t.childNodes[0];");
             rw.WriteLine("	if (x.style.display === \"\" || x.style.display === \"none\") {");
             rw.WriteLine("		x.style.display = \"block\";");
-rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Hide Test Configuration\";");
+            rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= img.outerHTML + \"Hide Test Configuration\";");
             rw.WriteLine("	} else {");
             rw.WriteLine("		x.style.display = \"none\";");
-rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test Configuration\";");
+            rw.WriteLine("	var img = t.childNodes[0];");
+            rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= img.outerHTML + \"Show Test Configuration\";");
             rw.WriteLine("	}");
             rw.WriteLine("}");
         }
@@ -682,7 +694,8 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
             Dictionary<string, Dictionary<string, string>> mismatchedValues, string[] excludedFields = null, bool wideLayout = false)
         {
             var thisObject = (T)instance;
-            rw.WriteLine("<div><hr></div><div class=\"typename\">{0}</div><div><hr></div>", thisObject.GetType().Name);
+
+            rw.WriteLine("<div><hr></div><div class=\"{0}\">{1}</div><div><hr></div>", TypeHasMismatches(mismatchedValues, thisObject) ? "typenamewarning" : "typename",  thisObject.GetType().Name);
             rw.WriteLine(wideLayout ? "<div class=\"systeminfowide\"><pre>" : "<div class=\"systeminfo\"><pre>");
 
             var sb = new StringBuilder();
@@ -693,11 +706,12 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
                 {
                     continue;
                 }
-                sb.Append("<div class=\"fieldgroup\">");
-
-                sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
+                
                 if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
                 {
+                    sb.Append("<div class=\"fieldgroupwarning\">");
+                    sb.Append(string.Format("<div class=\"fieldnamewarning\">{0}</div>", field.Name));
+
                     var mismatchedValue = mismatchedValues[field.Name];
 
                     sb.Append("<div class=\"fieldvaluewarning\">");
@@ -722,6 +736,8 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
                 }
                 else
                 {
+                    sb.Append("<div class=\"fieldgroup\">");
+                    sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
                     sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>", GetFieldValues(field, thisObject)));
                 }
                
@@ -729,6 +745,13 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
             }
             rw.WriteLine(sb.ToString());
             rw.WriteLine("</pre></div>");
+        }
+
+        private static bool TypeHasMismatches<T>(Dictionary<string, Dictionary<string, string>> mismatchedValues, T thisObject)
+        {
+            var names = thisObject.GetType().GetFields().Select(f => f.Name);
+            var hasMatches = names.Intersect(mismatchedValues.Keys).Any();
+            return mismatchedValues.Count > 0 && hasMatches;
         }
 
         private object GetFieldValues<T>(FieldInfo field, T thisObject)
@@ -795,6 +818,18 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
                     .First(sg => ScrubStringForSafeForVariableUse(sg.SampleGroupName) == sampleGroupName).Threshold;
             }
             return threshold;
+        }
+
+        private int GetSampleCount(List<TestResult> resultsForThisTest, string sampleGroupName)
+        {
+            var sampleCount = 0;
+            if (resultsForThisTest.First().SampleGroupResults
+                .Any(sg => ScrubStringForSafeForVariableUse(sg.SampleGroupName) == sampleGroupName))
+            {
+                sampleCount = resultsForThisTest.First().SampleGroupResults
+                    .First(sg => ScrubStringForSafeForVariableUse(sg.SampleGroupName) == sampleGroupName).SampleCount;
+            }
+            return sampleCount;
         }
 
         private string GetAggregationType(List<TestResult> resultsForThisTest, string sampleGroupName)

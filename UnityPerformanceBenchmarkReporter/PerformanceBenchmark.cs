@@ -78,9 +78,23 @@ namespace UnityPerformanceBenchmarkReporter
 
             if (xmlFileNamePaths.Any())
             {
+                List<KeyValuePair<string, PerformanceTestRun>> perfTestRuns = new List<KeyValuePair<string, PerformanceTestRun>>();
+
                 foreach (var xmlFileNamePath in xmlFileNamePaths)
                 {
                     var performanceTestRun = testResultXmlParser.GetPerformanceTestRunFromXml(xmlFileNamePath);
+                    if (performanceTestRun != null && performanceTestRun.Results.Any())
+                    {
+                        perfTestRuns.Add( new KeyValuePair<string, PerformanceTestRun>(xmlFileNamePath, performanceTestRun));
+                    }
+                }
+
+                perfTestRuns.Sort((run1, run2) => run1.Value.StartTime.CompareTo(run2.Value.StartTime));
+                var resultFilesOrderByStartTime = perfTestRuns.ToArray();
+
+                for (int i = 0; i < resultFilesOrderByStartTime.Length; i++)
+                {
+                    var performanceTestRun = testResultXmlParser.GetPerformanceTestRunFromXml(resultFilesOrderByStartTime[i].Key);
 
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
@@ -88,19 +102,19 @@ namespace UnityPerformanceBenchmarkReporter
                         if (!results.Any())
                         {
                             Console.ForegroundColor = ConsoleColor.Yellow;
-                            Console.WriteLine("No performance test data found to report in: {0}", xmlFileNamePath);
+                            Console.WriteLine("No performance test data found to report in: {0}", resultFilesOrderByStartTime[i].Key);
                             Console.ResetColor();
                         }
                         testResults.AddRange(results);
 
                         performanceTestRunProcessor.UpdateTestResultsBasedOnBaselineResults(baselineTestResults, testResults, SigFig);
 
-                        ValidateMetadata(performanceTestRun, xmlFileNamePath);
+                        ValidateMetadata(performanceTestRun, resultFilesOrderByStartTime[i].Key);
                         runResults.Add(performanceTestRunProcessor.CreateTestRunResult
                             (
                                 performanceTestRun,
                                 results,
-                                Path.GetFileNameWithoutExtension(xmlFileNamePath),
+                                Path.GetFileNameWithoutExtension(resultFilesOrderByStartTime[i].Key),
                                 isBaseline)
                         );
                     }

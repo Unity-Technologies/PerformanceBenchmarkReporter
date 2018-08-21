@@ -21,6 +21,13 @@ namespace UnityPerformanceBenchmarkReporter
         public string[] EditorVersionResultFiles = Array.Empty<string>();
         public readonly Dictionary<string, Dictionary<string, string>> MismatchedEditorVersionValues = new Dictionary<string, Dictionary<string, string>>();
 
+        public bool MismatchesExist => PlayerSystemInfoResultFiles.Any() ||
+                                       PlayerSystemInfoResultFiles.Any() ||
+                                       QualitySettingsResultFiles.Any() ||
+                                       ScreenSettingsResultFiles.Any() ||
+                                       BuildSettingsResultFiles.Any() ||
+                                       EditorVersionResultFiles.Any();
+
         public void ValidatePlayerSystemInfo(PerformanceTestRun testRun1, PerformanceTestRun testRun2, string firstTestRunResultPath, string xmlFileNamePath)
         {
             if (testRun1.PlayerSystemInfo.DeviceModel != testRun2.PlayerSystemInfo.DeviceModel)
