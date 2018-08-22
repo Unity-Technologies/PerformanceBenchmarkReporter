@@ -23,6 +23,8 @@
     <EmbeddedResource Include="Report\styles.css" />
     <EmbeddedResource Include="Report\UnityLogo.png" />
     <EmbeddedResource Include="Report\warning.png" />
+    <EmbeddedResource Include="Report\help.png" />
+    <EmbeddedResource Include="Report\help-hover.png" />
   </ItemGroup>
 
 </Project>

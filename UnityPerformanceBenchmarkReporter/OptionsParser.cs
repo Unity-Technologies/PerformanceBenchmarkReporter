@@ -13,8 +13,6 @@ namespace UnityPerformanceBenchmarkReporter
         private readonly string learnMore =
             "To learn more about the Unity Performance Benchmark Reporter visit the Unity Performance Benchmark Reporter GitHub wiki at https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki.";
 
-        private string sigFigString;
-
         public enum ResultType
         {
             Test,
@@ -32,19 +30,6 @@ namespace UnityPerformanceBenchmarkReporter
                 if (help)
                 {
                     ShowHelp(string.Empty, os);
-                }
-
-                if (!string.IsNullOrEmpty(sigFigString))
-                {
-                    try
-                    {
-                        var sigFig = Convert.ToUInt32(sigFigString);
-                        performanceBenchmark.AddSigFig(sigFig);
-                    }
-                    catch (Exception)
-                    {
-                        ShowHelp(string.Format("Error trying to convert sigfig value {0} to integer >= 0.", sigFigString), os);
-                    }
                 }
 
                 if (!performanceBenchmark.ResultXmlFilePaths.Any() && !performanceBenchmark.ResultXmlDirectoryPaths.Any())
@@ -79,15 +64,7 @@ namespace UnityPerformanceBenchmarkReporter
                             performanceBenchmark.AddXmlSourcePath(xmlsource, "baselinexmlsource", ResultType.Baseline);
                         })
                 .Add("reportdirpath:", "OPTIONAL - Path to directory where the UnityPerformanceBenchmark report will be written. Default is current working directory.",
-                    performanceBenchmark.AddReportDirPath)
-                .Add("sigfig:", "OPTIONAL - Specify the number of significant figures to use when collecting and calculating thresholds and failures for non-integer based metrics (from the profiler, Camer.Render CPU time in milliseconds, for example). This value must be an integer >= 0. Default is 3.",
-                    option =>
-                    {
-                        if (option != null)
-                        {
-                            sigFigString = option;
-                        }
-                    });
+                    performanceBenchmark.AddReportDirPath);
         }
 
         private void ShowHelp(string message, OptionSet optionSet)

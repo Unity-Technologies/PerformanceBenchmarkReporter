@@ -35,7 +35,7 @@ namespace UnityPerformanceBenchmarkReporter
             // Most values are in milliseconds or a count of something, so using more often creates an artificial baseline
             // failure based on insignificant digits equating to a microsecond, or less, time difference. The Unity Profiler only shows
             // up to three significant figures for milliseconds as well.
-            SigFig = 3;
+            SigFig = 2;
         }
 
         public void AddPerformanceTestRunResults(

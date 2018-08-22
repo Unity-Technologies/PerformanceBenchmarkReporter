@@ -19,7 +19,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
             "Chart.bundle.js",
             "styles.css",
             "UnityLogo.png",
-            "warning.png"
+            "warning.png",
+            "help.png"
         };
 
         private List<string> distinctTestNames;
@@ -155,7 +156,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private void WriteTestConfig(StreamWriter streamWriter)
         {
             streamWriter.Write("<table class=\"testconfigtable\">");
-            streamWriter.WriteLine("<tr><td>");
+            streamWriter.WriteLine("<tr><td class=\"flex\">");
             WriteShowTestConfigButton(streamWriter);
             streamWriter.WriteLine("</td></tr>");
             streamWriter.WriteLine("<tr><td>");
@@ -211,7 +212,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
 
             rw.WriteLine(
-                "<div><button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">{0}Show Test Configuration</button>{1}</div>",
+                "<div class=\"toggleconfigwrapper\"><button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">{0}Show Test Configuration</button>{1}</div><a title=\"Help\" class=\"help\" href=\"https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki\" target=\"_blank\"><div class=\"helpwrapper\"></div></a>",
                 metadataValidator.MismatchesExist
                     ? "<image class=\"warning\" src=\"warning.png\"></img>"
                     : string.Empty,
@@ -248,7 +249,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     var resultColors = new StringBuilder();
                     resultColors.Append("		backgroundColor: [");
 
-                    foreach (var testResult in resultsForThisTest)
+                   foreach (var testResult in resultsForThisTest)
                     {
                         if (testResult.SampleGroupResults.Any(r =>
                             ScrubStringForSafeForVariableUse(r.SampleGroupName).Equals(distinctSampleGroupName)))
@@ -272,20 +273,22 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     rw.WriteLine("		borderWidth: 1,");
                     rw.WriteLine("		label: \"" + (sampleUnit.Equals("None") ? distinctSampleGroupName : sampleUnit) + "\",");
                     rw.WriteLine("		legend: {");
-                    rw.WriteLine("display: false,");
+                    rw.WriteLine("display: true,");
                     rw.WriteLine("		},");
                     rw.WriteLine("		data: {0}", string.Format("{0}_Aggregated_Values", canvasId));
                     rw.WriteLine("	}");
+
                     if (baselineResults != null)
                     {
                         rw.WriteLine("	,{");
                         rw.WriteLine("		borderColor: baselineColor,");
+                        rw.WriteLine("		backgroundColor: baselineColor,");
                         rw.WriteLine("		borderWidth: 2,");
                         rw.WriteLine("		fill: false,");
                         rw.WriteLine("		pointStyle: 'line',");
                         rw.WriteLine("		label: \"" + (sampleUnit.Equals("None") ? "Baseline " + distinctSampleGroupName : "Baseline " + sampleUnit) + "\",");
                         rw.WriteLine("		legend: {");
-                        rw.WriteLine("display: false,");
+                        rw.WriteLine("display: true,");
                         rw.WriteLine("		},");
                         rw.WriteLine("		data: {0}", string.Format("{0}_Baseline_Values,", canvasId));
                         rw.WriteLine("		type: 'line'}");
@@ -361,25 +364,28 @@ namespace UnityPerformanceBenchmarkReporter.Report
             var threshold = GetThreshold(resultsForThisTest, distinctSampleGroupName);
             var sampleCount = GetSampleCount(resultsForThisTest, distinctSampleGroupName);
             var canvasId = GetCanvasId(distinctTestName, distinctSampleGroupName);
+            
+            rw.WriteLine("Chart.defaults.global.elements.rectangle.borderColor = \'#fff\';");
 
-            rw.WriteLine("	var ctx{0} = document.getElementById('{0}').getContext('2d');", canvasId);
-            rw.WriteLine("	window.{0} = new Chart(ctx{0}, {{", canvasId);
-            rw.WriteLine("		type: 'bar',");
-            rw.WriteLine("		data: {0}_data,", canvasId);
-            rw.WriteLine("		options: {");
+            rw.WriteLine("var ctx{0} = document.getElementById('{0}').getContext('2d');", canvasId);
+            rw.WriteLine("window.{0} = new Chart(ctx{0}, {{", canvasId);
+            rw.WriteLine("type: 'bar',");
+            rw.WriteLine("data: {0}_data,", canvasId);
+            rw.WriteLine("options: {");
             rw.WriteLine("tooltips:");
             rw.WriteLine("{");
-            rw.WriteLine("    mode: 'index',");
-            rw.WriteLine("    callbacks:");
-            rw.WriteLine("    {");
-            rw.WriteLine("        footer: function(tooltipItems, data) {");
-            rw.WriteLine("		var std = {0}_Stdev_Values[tooltipItems[0].index];", canvasId);
-            rw.WriteLine("            return 'Threshold: {0} Standard deviation: ' + std + ' Sample count: {1}';", threshold, sampleCount);
-            rw.WriteLine("        },");
-            rw.WriteLine("   },");
-            rw.WriteLine("    footerFontStyle: 'normal'");
+            rw.WriteLine("mode: 'index',");
+            rw.WriteLine("callbacks: {");
+            rw.WriteLine("title: function(tooltipItems, data) {");
+            rw.WriteLine("var color = {0}_data.datasets[0].backgroundColor[tooltipItems[0].index];", canvasId);
+            rw.WriteLine("return tooltipItems[0].xLabel + (color === failColor ? \" regressed\" : \" within threshold\");},");
+            rw.WriteLine("beforeFooter: function(tooltipItems, data) {");
+            rw.WriteLine("var std = {0}_Stdev_Values[tooltipItems[0].index];", canvasId);
+            rw.WriteLine("var footermsg = ['Threshold: {0}']; footermsg.push('Standard deviation: ' + std); footermsg.push('Sample count: {1}'); return footermsg;}},", threshold, sampleCount);
             rw.WriteLine("},");
-            rw.WriteLine("legend: { display: false},");
+            rw.WriteLine("footerFontStyle: 'normal'");
+            rw.WriteLine("},");
+            rw.WriteLine("legend: { display: true},");
             rw.WriteLine("maintainAspectRatio: false,");
             rw.WriteLine("scales: {");
             rw.WriteLine("	yAxes: [{");
@@ -393,13 +399,21 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("suggestedMax: .001,");
             rw.WriteLine("suggestedMin: .0");
             rw.WriteLine("		}");
+            rw.WriteLine("	}],");
+            rw.WriteLine("	xAxes: [{");
+            rw.WriteLine("		display: true,");
+            rw.WriteLine("		scaleLabel:");
+            rw.WriteLine("		{");
+            rw.WriteLine("		    display: true,");
+            rw.WriteLine("		    labelString: \"Result File\"");
+            rw.WriteLine("		}");
             rw.WriteLine("	}]");
             rw.WriteLine("},");
             rw.WriteLine("responsive: true,");
             rw.WriteLine("responsiveAnimationDuration: 0,");
             rw.WriteLine("title: {");
             rw.WriteLine("	display: true,");
-            rw.WriteLine("	text: \"{0}\"", distinctSampleGroupName);
+            rw.WriteLine("	text: \"{0} Sample Group\"", distinctSampleGroupName);
             rw.WriteLine("}");
             rw.WriteLine("		}");
             rw.WriteLine("	});");
@@ -414,11 +428,11 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("	var img = t.childNodes[0];");
             rw.WriteLine("	if (x.style.display === \"\" || x.style.display === \"none\") {");
             rw.WriteLine("		x.style.display = \"block\";");
-            rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= img.outerHTML + \"Hide Test Configuration\";");
+            rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= (img.outerHTML || \"\") + \"Hide Test Configuration\";");
             rw.WriteLine("	} else {");
             rw.WriteLine("		x.style.display = \"none\";");
             rw.WriteLine("	var img = t.childNodes[0];");
-            rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= img.outerHTML + \"Show Test Configuration\";");
+            rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= (img.outerHTML || \"\") + \"Show Test Configuration\";");
             rw.WriteLine("	}");
             rw.WriteLine("}");
         }
@@ -478,15 +492,12 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             var resultsForThisTest = GetResultsForThisTest(distinctTestName);
             var noTestRegressions = IsNoTestFailures(resultsForThisTest);
-            rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td><hr></td></tr>" : "<tr><td><hr></td></tr>");
-            rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\">" : "<tr>");
-            rw.WriteLine("<td class=\"testnamecell chartcell\">");
-            rw.WriteLine(
-                noTestRegressions
-                    ? "<div class=\"testname nofailures\"><h3>{0}</h3> </div>"
-                    : "<div class=\"testname\"><h3>{0}</h3> </div>", distinctTestName);
-            rw.WriteLine("</td></tr>");
-            rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td><hr></td></tr>" : "<tr><td><hr></td></tr>");
+            //rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td></td></tr>" : "<tr><td></td></tr>");
+            rw.WriteLine("<tr {0}>", noTestRegressions ? "class=\"nofailures\"" : string.Empty);
+            rw.WriteLine("<td class=\"testnamecell\"><div class=\"testname {0}\"><h5><p>Test Name:</p></h5><h3><p>{1}</p></h3></div></td></tr>", 
+                noTestRegressions ? "nofailures" : string.Empty, 
+                distinctTestName);
+            rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td></td></tr>" : "<tr><td></td></tr>");
 
             foreach (var distinctSampleGroupName in distinctSampleGroupNames)
             {
@@ -730,7 +741,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
                         var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
 
                         
-                        sb.Append(string.Format("<tr title={4}><td {0}>{1}</td><td {0}>{2}</td><td {0}>{3}</td></tr>", value.Equals(baselineValue) ? "class=\"targetvalue\"" : string.Empty, value, pathParts[pathParts.Length - 1], path, value.Equals(baselineValue) ? "\"Baseline configuration\"" : "\"Mismatched configuration\""));
+                        sb.Append(string.Format("<tr><td {0} title={4}>{1}</td><td {0}>{2}</td><td {0}>{3}</td></tr>", value.Equals(baselineValue) ? "class=\"targetvalue\"" : string.Empty, value, pathParts[pathParts.Length - 1], path, i == 0 ? "\"Configuration used for comparison\"" : value.Equals(baselineValue) ? "\"Matching configuration\"" : "\"Mismatched configuration\""));
                     }
 
                     sb.Append("</table></div>");

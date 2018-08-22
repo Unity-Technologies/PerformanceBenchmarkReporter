@@ -12,14 +12,48 @@ h3 {
     overflow-wrap: break-word;
 }
 
+h5 {
+    font-size: 1vh;
+    overflow-wrap: break-word;
+}
+
+p {
+    line-height: 25%
+}
+
 th {
     border-bottom-style: solid;
     border-bottom-color: lightgray;
 }
 
 .targetvalue {
-    color: black !important;
+    color: black;
 }
+
+.help {
+    width: 100%;
+}
+
+.toggleconfigwrapper {
+    display: inline-flex;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.helpwrapper {
+    display: inline;
+    background-image: url("help.png");
+    height: 4vh;
+    width: 4vh;
+    background-repeat: no-repeat;
+    float: right;
+    background-size: 100%;
+    padding: 10px;
+}
+
+    .helpwrapper:hover {
+        background-image: url("help2.png");
+    }
 
 .titletable {
     height: 80%;
@@ -70,6 +104,7 @@ th {
 
 .testnamecell {
     background-color: lightgray;
+    padding: 0px 5px 0px 5px;
 }
 
 .testname {
@@ -82,10 +117,10 @@ th {
     border: none;
     color: white;
     padding: 15px 25px;
-    text-align: center;
     cursor: pointer;
     border-radius: 4px;
     font-weight: bold;
+    margin: 5px 5px 5px 0px;
 }
 
 .button {
@@ -94,23 +129,25 @@ th {
     border: none;
     color: white;
     padding: 15px 25px;
-    text-align: center;
     cursor: pointer;
     border-radius: 4px;
     font-weight: bold;
+    margin: 5px 5px 5px 0px;
 }
 
 div > .configwarning {
+    font-size: 1.25vh;
+    font-weight: bold;
     visibility: hidden;
     width: 120px;
     background-color: #f28034;
     color: white;
-    text-align: center;
-    border-radius: 6px;
+    text-align: left;
+    border-radius: 4px;
     z-index: 1;
     top: -5px;
     left: 105%;
-    padding: 5px 5px 5px 5px;
+    padding: 10px 5px 5px 5px;
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
     margin: 5px;
 }
@@ -122,6 +159,10 @@ div:hover > .configwarning {
 
 .button:hover {
     background-color: #2196F3 !important;
+}
+
+.flex {
+    display: flex;
 }
 
 .buttondiv {
@@ -141,6 +182,9 @@ div:hover > .configwarning {
 
 .showedfailedtests {
     padding: 5px 5px 5px 0px;
+    display: inline-flex;
+    align-items: flex-start;
+    width: 100%;
 }
 
 
@@ -193,7 +237,7 @@ div:hover > .configwarning {
     font-size: 1.25vh;
     overflow-wrap: break-word;
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
-    margin: 4px;
+    padding: 4px;
 }
 
 .fieldnamewarning {
@@ -203,12 +247,12 @@ div:hover > .configwarning {
     font-size: 1.25vh;
     overflow-wrap: break-word;
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
-    margin: 4px;
+    padding: 4px;
 }
 
 .fieldvalue {
     font-size: 1.1vh;
-    margin: 4px;
+    padding: 0px 4px 4px 4px;
 }
 
 .fieldvaluewarning {
@@ -310,13 +354,13 @@ pre {
 }
 
 .disabledContainerLabel {
+    font-size: 1.25vh important !;
     display: block;
     font-weight: bold;
     position: relative;
     padding-left: 35px;
     margin-bottom: 12px;
     cursor: pointer;
-    font-size: medium;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -332,18 +376,20 @@ pre {
     }
 
     .disabledContainerLabel .tooltiptext {
+        font-size: 1.25vh;
         visibility: hidden;
         width: 120px;
         background-color: #2196F3;
         color: #fff;
-        text-align: center;
-        border-radius: 6px;
+        text-align: left;
+        border-radius: 4px;
         padding: 5px 0;
         z-index: 1;
         top: -5px;
         left: 105%;
-        padding: 5px 5px 5px 5px;
+        padding: 10px 5px 5px 5px;
         font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+        margin: 5px;
     }
 
     .disabledContainerLabel:hover .tooltiptext {
@@ -365,6 +411,9 @@ pre {
 
 .chartcell {
     padding: 5px 5px 5px 10px;
+    border-width: 2px 0px 0px 0px;
+    border-style: solid;
+    border-color: darkgray;
 }
 
 .container {
