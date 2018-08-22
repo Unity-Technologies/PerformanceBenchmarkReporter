@@ -14,13 +14,16 @@ namespace UnityPerformanceBenchmarkReporter
         public HashSet<string> BaselineXmlFilePaths { get; } = new HashSet<string>();
         public HashSet<string> BaselineXmlDirectoryPaths { get; } = new HashSet<string>();
         public uint SigFig { get; private set; }
-        public string ReportDirPath { get; set; }
+        public string ReportDirPath { get; private set; }
+
+        public readonly MetadataValidator MetadataValidator = new MetadataValidator();
 
         private bool firstResult = true;
+        private string firstTestRunResultPath;
         private PerformanceTestRun firstTestRun = new PerformanceTestRun();
         private readonly PerformanceTestRunProcessor performanceTestRunProcessor = new PerformanceTestRunProcessor();
         private readonly string xmlFileExtension = ".xml";
-        
+
 
         public bool BaselineResultFilesExist => BaselineXmlFilePaths.Any() || BaselineXmlDirectoryPaths.Any();
 
@@ -30,8 +33,9 @@ namespace UnityPerformanceBenchmarkReporter
         {
             // Default significant figures to use for non-integer metrics if user doesn't specify another value.
             // Most values are in milliseconds or a count of something, so using more often creates an artificial baseline
-            // failure based on insignificant digits
-            SigFig = 0;
+            // failure based on insignificant digits equating to a microsecond, or less, time difference. The Unity Profiler only shows
+            // up to three significant figures for milliseconds as well.
+            SigFig = 2;
         }
 
         public void AddPerformanceTestRunResults(
@@ -75,9 +79,23 @@ namespace UnityPerformanceBenchmarkReporter
 
             if (xmlFileNamePaths.Any())
             {
+                var perfTestRuns = new List<KeyValuePair<string, PerformanceTestRun>>();
+
                 foreach (var xmlFileNamePath in xmlFileNamePaths)
                 {
                     var performanceTestRun = testResultXmlParser.GetPerformanceTestRunFromXml(xmlFileNamePath);
+                    if (performanceTestRun != null && performanceTestRun.Results.Any())
+                    {
+                        perfTestRuns.Add( new KeyValuePair<string, PerformanceTestRun>(xmlFileNamePath, performanceTestRun));
+                    }
+                }
+
+                perfTestRuns.Sort((run1, run2) => run1.Value.StartTime.CompareTo(run2.Value.StartTime));
+                var resultFilesOrderByStartTime = perfTestRuns.ToArray();
+
+                for (var i = 0; i < resultFilesOrderByStartTime.Length; i++)
+                {
+                    var performanceTestRun = testResultXmlParser.GetPerformanceTestRunFromXml(resultFilesOrderByStartTime[i].Key);
 
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
@@ -85,19 +103,19 @@ namespace UnityPerformanceBenchmarkReporter
                         if (!results.Any())
                         {
                             Console.ForegroundColor = ConsoleColor.Yellow;
-                            Console.WriteLine("No performance test data found to report in: {0}", xmlFileNamePath);
+                            Console.WriteLine("No performance test data found to report in: {0}", resultFilesOrderByStartTime[i].Key);
                             Console.ResetColor();
                         }
                         testResults.AddRange(results);
 
                         performanceTestRunProcessor.UpdateTestResultsBasedOnBaselineResults(baselineTestResults, testResults, SigFig);
 
-                        ValidateMetadata(performanceTestRun);
+                        ValidateMetadata(performanceTestRun, resultFilesOrderByStartTime[i].Key);
                         runResults.Add(performanceTestRunProcessor.CreateTestRunResult
                             (
-                                firstTestRun,
-                                testResults,
-                                Path.GetFileNameWithoutExtension(xmlFileNamePath),
+                                performanceTestRun,
+                                results,
+                                Path.GetFileNameWithoutExtension(resultFilesOrderByStartTime[i].Key),
                                 isBaseline)
                         );
                     }
@@ -112,20 +130,22 @@ namespace UnityPerformanceBenchmarkReporter
             return xmlFileNames;
         }
 
-        private void ValidateMetadata(PerformanceTestRun performanceTestRun)
+        private void ValidateMetadata(PerformanceTestRun performanceTestRun, string xmlFileNamePath)
         {
             if (firstResult)
             {
+                firstTestRunResultPath = xmlFileNamePath;
                 firstTestRun = performanceTestRun;
                 firstResult = false;
             }
             else
             {
-                var metadataValidator = new MetadataValidator();
-                metadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun);
-                metadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun);
-                metadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun);
-                metadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun);
+                MetadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidateBuildSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidateEditorVersion(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
             }
         }
 

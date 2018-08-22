@@ -113,7 +113,7 @@ namespace UnityPerformanceBenchmarkReporter
             return mergedTestExecutions;
         }
 
-        double GetAggregatedSampleValue(SampleGroup sampleGroup)
+        private double GetAggregatedSampleValue(SampleGroup sampleGroup)
         {
             double aggregatedSampleValue;
             switch (sampleGroup.Definition.AggregationType)
@@ -139,7 +139,7 @@ namespace UnityPerformanceBenchmarkReporter
             return aggregatedSampleValue;
         }
 
-        MeasurementResult DeterminePerformanceResult(SampleGroupResult sampleGroup, uint sigFig)
+        private MeasurementResult DeterminePerformanceResult(SampleGroupResult sampleGroup, uint sigFig)
         {
             var measurementResult = MeasurementResult.Neutral;
             var positiveThresholdValue = sampleGroup.BaselineValue + sampleGroup.BaselineValue * sampleGroup.Threshold;

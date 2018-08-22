@@ -18,7 +18,9 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             "Chart.bundle.js",
             "styles.css",
-            "UnityLogo.png"
+            "UnityLogo.png",
+            "warning.png",
+            "help.png"
         };
 
         private List<string> distinctTestNames;
@@ -27,12 +29,14 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private readonly Regex illegalCharacterScrubberRegex = new Regex("[^0-9a-zA-Z]", RegexOptions.Compiled);
         private uint thisSigFig;
         private bool thisHasBenchmarkResults;
+        private MetadataValidator metadataValidator;
 
-        public void WriteReport(List<PerformanceTestRunResult> results, uint sigFig = 2,
+        public void WriteReport(List<PerformanceTestRunResult> results, MetadataValidator mdValidator, uint sigFig = 2,
             string reportDirectoryPath = null, bool hasBenchmarkResults = false)
         {
             if (results != null && results.Count > 0)
             {
+                metadataValidator = mdValidator;
                 thisSigFig = sigFig;
                 thisHasBenchmarkResults = hasBenchmarkResults;
                 EnsureOrderedResults(results);
@@ -152,7 +156,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private void WriteTestConfig(StreamWriter streamWriter)
         {
             streamWriter.Write("<table class=\"testconfigtable\">");
-            streamWriter.WriteLine("<tr><td>");
+            streamWriter.WriteLine("<tr><td class=\"flex\">");
             WriteShowTestConfigButton(streamWriter);
             streamWriter.WriteLine("</td></tr>");
             streamWriter.WriteLine("<tr><td>");
@@ -171,17 +175,13 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private static void WriteStatMethodButtons(StreamWriter streamWriter)
         {
-            streamWriter.WriteLine("<tr><td>");
-            streamWriter.WriteLine("<div class=\"buttonheader\">Select statistical method</div>");
             streamWriter.WriteLine(
-                "<div class=\"buttondiv\"><button id=\"MinButton\" class=\"button\">Min</button></div>&nbsp<div class=\"buttondiv\"><button id=\"MaxButton\" class=\"button\">Max</button></div>&nbsp<div class=\"buttondiv\"><button id=\"MedianButton\" class=\"initialbutton\">Median</button></div>&nbsp<div class=\"buttondiv\"><button id=\"AverageButton\" class=\"button\">Average</button></div>");
-            streamWriter.WriteLine("</td></tr>");
+                "<tr><td><div class=\"buttonheader\">Select statistical method</div><div class=\"buttondiv\"><button id=\"MinButton\" class=\"button\">Min</button></div>&nbsp<div class=\"buttondiv\"><button id=\"MaxButton\" class=\"button\">Max</button></div>&nbsp<div class=\"buttondiv\"><button id=\"MedianButton\" class=\"initialbutton\">Median</button></div>&nbsp<div class=\"buttondiv\"><button id=\"AverageButton\" class=\"button\">Average</button></div></td></tr>");
         }
 
         private void WriteShowFailedTestsCheckbox(StreamWriter streamWriter)
         {
-            streamWriter.WriteLine("<tr><td>");
-            streamWriter.WriteLine("<div class=\"showedfailedtests\">");
+            streamWriter.WriteLine("<tr><td><div class=\"showedfailedtests\">");
             if (thisHasBenchmarkResults)
             {
                 streamWriter.WriteLine("<label id=\"hidefailed\" class=\"containerLabel\">Show failed tests only");
@@ -194,10 +194,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     "<span class=\"tooltiptext\">No failed tests to show because there are no baseline results.</span>");
                 streamWriter.WriteLine("<input type=\"checkbox\" disabled>");
             }
-            streamWriter.WriteLine("<span class=\"checkmark\"></span>");
-            streamWriter.WriteLine("</label>");
-            streamWriter.WriteLine("</div");
-            streamWriter.WriteLine("</td></tr>");
+            streamWriter.WriteLine("<span class=\"checkmark\"></span></label></div></td></tr>");
         }
 
         private bool TestRunSettingsExist()
@@ -213,7 +210,15 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private void WriteShowTestConfigButton(StreamWriter rw)
         {
-            rw.WriteLine("<button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">Show Test Configuration</button>");
+
+            rw.WriteLine(
+                "<div class=\"toggleconfigwrapper\"><button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">{0}Show Test Configuration</button>{1}</div><a title=\"Help\" class=\"help\" href=\"https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki\" target=\"_blank\"><div class=\"helpwrapper\"></div></a>",
+                metadataValidator.MismatchesExist
+                    ? "<image class=\"warning\" src=\"warning.png\"></img>"
+                    : string.Empty,
+                metadataValidator.MismatchesExist
+                    ? "<span class=\"configwarning\">Mismatched test configurations present</span>"
+                    : string.Empty);
         }
 
         private void WriteJavaScript(StreamWriter rw)
@@ -223,7 +228,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("var passColor = \"rgba(54, 162, 235,0.5)\";");
             rw.WriteLine("var baselineColor = \"rgb(255, 159, 64)\";");
 
-            WriteShowTestConfigurationButton(rw);
+            WriteShowTestConfigurationOnClickEvent(rw);
             WriteToggleCanvasWithNoFailures(rw);
 
             WriteTestRunArray(rw);
@@ -244,7 +249,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     var resultColors = new StringBuilder();
                     resultColors.Append("		backgroundColor: [");
 
-                    foreach (var testResult in resultsForThisTest)
+                   foreach (var testResult in resultsForThisTest)
                     {
                         if (testResult.SampleGroupResults.Any(r =>
                             ScrubStringForSafeForVariableUse(r.SampleGroupName).Equals(distinctSampleGroupName)))
@@ -268,20 +273,22 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     rw.WriteLine("		borderWidth: 1,");
                     rw.WriteLine("		label: \"" + (sampleUnit.Equals("None") ? distinctSampleGroupName : sampleUnit) + "\",");
                     rw.WriteLine("		legend: {");
-                    rw.WriteLine("display: false,");
+                    rw.WriteLine("display: true,");
                     rw.WriteLine("		},");
                     rw.WriteLine("		data: {0}", string.Format("{0}_Aggregated_Values", canvasId));
                     rw.WriteLine("	}");
+
                     if (baselineResults != null)
                     {
                         rw.WriteLine("	,{");
                         rw.WriteLine("		borderColor: baselineColor,");
+                        rw.WriteLine("		backgroundColor: baselineColor,");
                         rw.WriteLine("		borderWidth: 2,");
                         rw.WriteLine("		fill: false,");
                         rw.WriteLine("		pointStyle: 'line',");
                         rw.WriteLine("		label: \"" + (sampleUnit.Equals("None") ? "Baseline " + distinctSampleGroupName : "Baseline " + sampleUnit) + "\",");
                         rw.WriteLine("		legend: {");
-                        rw.WriteLine("display: false,");
+                        rw.WriteLine("display: true,");
                         rw.WriteLine("		},");
                         rw.WriteLine("		data: {0}", string.Format("{0}_Baseline_Values,", canvasId));
                         rw.WriteLine("		type: 'line'}");
@@ -355,26 +362,30 @@ namespace UnityPerformanceBenchmarkReporter.Report
             var aggregationType = GetAggregationType(resultsForThisTest, distinctSampleGroupName);
             var sampleUnit = GetSampleUnit(resultsForThisTest, distinctSampleGroupName);
             var threshold = GetThreshold(resultsForThisTest, distinctSampleGroupName);
+            var sampleCount = GetSampleCount(resultsForThisTest, distinctSampleGroupName);
             var canvasId = GetCanvasId(distinctTestName, distinctSampleGroupName);
+            
+            rw.WriteLine("Chart.defaults.global.elements.rectangle.borderColor = \'#fff\';");
 
-            rw.WriteLine("	var ctx{0} = document.getElementById('{0}').getContext('2d');", canvasId);
-            rw.WriteLine("	window.{0} = new Chart(ctx{0}, {{", canvasId);
-            rw.WriteLine("		type: 'bar',");
-            rw.WriteLine("		data: {0}_data,", canvasId);
-            rw.WriteLine("		options: {");
+            rw.WriteLine("var ctx{0} = document.getElementById('{0}').getContext('2d');", canvasId);
+            rw.WriteLine("window.{0} = new Chart(ctx{0}, {{", canvasId);
+            rw.WriteLine("type: 'bar',");
+            rw.WriteLine("data: {0}_data,", canvasId);
+            rw.WriteLine("options: {");
             rw.WriteLine("tooltips:");
             rw.WriteLine("{");
-            rw.WriteLine("    mode: 'index',");
-            rw.WriteLine("    callbacks:");
-            rw.WriteLine("    {");
-            rw.WriteLine("        footer: function(tooltipItems, data) {");
-            rw.WriteLine("		var std = {0}_Stdev_Values[tooltipItems[0].index];", canvasId);
-            rw.WriteLine("            return 'Threshold: " + threshold + " Standard deviation: ' + std;");
-            rw.WriteLine("        },");
-            rw.WriteLine("   },");
-            rw.WriteLine("    footerFontStyle: 'normal'");
+            rw.WriteLine("mode: 'index',");
+            rw.WriteLine("callbacks: {");
+            rw.WriteLine("title: function(tooltipItems, data) {");
+            rw.WriteLine("var color = {0}_data.datasets[0].backgroundColor[tooltipItems[0].index];", canvasId);
+            rw.WriteLine("return tooltipItems[0].xLabel + (color === failColor ? \" regressed\" : \" within threshold\");},");
+            rw.WriteLine("beforeFooter: function(tooltipItems, data) {");
+            rw.WriteLine("var std = {0}_Stdev_Values[tooltipItems[0].index];", canvasId);
+            rw.WriteLine("var footermsg = ['Threshold: {0}']; footermsg.push('Standard deviation: ' + std); footermsg.push('Sample count: {1}'); return footermsg;}},", threshold, sampleCount);
             rw.WriteLine("},");
-            rw.WriteLine("legend: { display: false},");
+            rw.WriteLine("footerFontStyle: 'normal'");
+            rw.WriteLine("},");
+            rw.WriteLine("legend: { display: true},");
             rw.WriteLine("maintainAspectRatio: false,");
             rw.WriteLine("scales: {");
             rw.WriteLine("	yAxes: [{");
@@ -388,29 +399,40 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("suggestedMax: .001,");
             rw.WriteLine("suggestedMin: .0");
             rw.WriteLine("		}");
+            rw.WriteLine("	}],");
+            rw.WriteLine("	xAxes: [{");
+            rw.WriteLine("		display: true,");
+            rw.WriteLine("		scaleLabel:");
+            rw.WriteLine("		{");
+            rw.WriteLine("		    display: true,");
+            rw.WriteLine("		    labelString: \"Result File\"");
+            rw.WriteLine("		}");
             rw.WriteLine("	}]");
             rw.WriteLine("},");
             rw.WriteLine("responsive: true,");
             rw.WriteLine("responsiveAnimationDuration: 0,");
             rw.WriteLine("title: {");
             rw.WriteLine("	display: true,");
-            rw.WriteLine("	text: \"{0}\"", distinctSampleGroupName);
+            rw.WriteLine("	text: \"{0} Sample Group\"", distinctSampleGroupName);
             rw.WriteLine("}");
             rw.WriteLine("		}");
             rw.WriteLine("	});");
             rw.WriteLine("	");
         }
 
-        private void WriteShowTestConfigurationButton(StreamWriter rw)
+        private void WriteShowTestConfigurationOnClickEvent(StreamWriter rw)
         {
             rw.WriteLine("function showTestConfiguration() {");
             rw.WriteLine("	var x = document.getElementById(\"testconfig\");");
-            rw.WriteLine("	if (x.style.display === \"none\") {");
+            rw.WriteLine("	var t = document.getElementById(\"toggleconfig\");");
+            rw.WriteLine("	var img = t.childNodes[0];");
+            rw.WriteLine("	if (x.style.display === \"\" || x.style.display === \"none\") {");
             rw.WriteLine("		x.style.display = \"block\";");
-rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Hide Test Configuration\";");
+            rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= (img.outerHTML || \"\") + \"Hide Test Configuration\";");
             rw.WriteLine("	} else {");
             rw.WriteLine("		x.style.display = \"none\";");
-rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test Configuration\";");
+            rw.WriteLine("	var img = t.childNodes[0];");
+            rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= (img.outerHTML || \"\") + \"Show Test Configuration\";");
             rw.WriteLine("	}");
             rw.WriteLine("}");
         }
@@ -470,25 +492,22 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
         {
             var resultsForThisTest = GetResultsForThisTest(distinctTestName);
             var noTestRegressions = IsNoTestFailures(resultsForThisTest);
-            rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td><hr></td></tr>" : "<tr><td><hr></td></tr>");
-            rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\">" : "<tr>");
-            rw.WriteLine("<td class=\"testnamecell chartcell\">");
-            rw.WriteLine(
-                noTestRegressions
-                    ? "<div class=\"testname nofailures\"><h3>{0}</h3> </div>"
-                    : "<div class=\"testname\"><h3>{0}</h3> </div>", distinctTestName);
-            rw.WriteLine("</td></tr>");
-            rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td><hr></td></tr>" : "<tr><td><hr></td></tr>");
+            //rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td></td></tr>" : "<tr><td></td></tr>");
+            rw.WriteLine("<tr {0}>", noTestRegressions ? "class=\"nofailures\"" : string.Empty);
+            rw.WriteLine("<td class=\"testnamecell\"><div class=\"testname {0}\"><h5><p>Test Name:</p></h5><h3><p>{1}</p></h3></div></td></tr>", 
+                noTestRegressions ? "nofailures" : string.Empty, 
+                distinctTestName);
+            rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td></td></tr>" : "<tr><td></td></tr>");
 
             foreach (var distinctSampleGroupName in distinctSampleGroupNames)
             {
-                WriteResultForThisSampleGroup(rw, distinctTestName, resultsForThisTest, distinctSampleGroupName, noTestRegressions);
+                WriteResultForThisSampleGroup(rw, distinctTestName, resultsForThisTest, distinctSampleGroupName);
             }
         }
 
         private void WriteResultForThisSampleGroup(StreamWriter rw, string distinctTestName,
             List<TestResult> resultsForThisTest,
-            string distinctSampleGroupName, bool noTestRegressions)
+            string distinctSampleGroupName)
         {
             if (!SampleGroupHasSamples(resultsForThisTest, distinctSampleGroupName))
             {
@@ -511,7 +530,7 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
 
         private bool IsNoTestFailures(List<TestResult> resultsForThisTest)
         {
-            bool noTestFailures = true;
+            var noTestFailures = true;
             foreach (var distinctSampleGroupName2 in distinctSampleGroupNames)
             {
                 if (!SampleGroupHasSamples(resultsForThisTest, distinctSampleGroupName2)) continue;
@@ -644,76 +663,134 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
 
             if (firstResult.PlayerSystemInfo != null)
             {
-                WriteClassNameWithFields<PlayerSystemInfo>(rw, firstResult.PlayerSystemInfo);
+                WriteClassNameWithFields<PlayerSystemInfo>(rw, firstResult.PlayerSystemInfo, metadataValidator.PlayerSystemInfoResultFiles, metadataValidator.MismatchedPlayerSystemInfoValues);
             }
 
             if (firstResult.PlayerSettings != null)
             {
-                WriteClassNameWithFields<PlayerSettings>(rw, firstResult.PlayerSettings);
+                WriteClassNameWithFields<PlayerSettings>(rw, firstResult.PlayerSettings, metadataValidator.PlayerSettingsResultFiles, metadataValidator.MismatchedPlayerSettingsValues);
             }
 
             if (firstResult.QualitySettings != null)
             {
-                WriteClassNameWithFields<QualitySettings>(rw, firstResult.QualitySettings);
+                WriteClassNameWithFields<QualitySettings>(rw, firstResult.QualitySettings, metadataValidator.QualitySettingsResultFiles, metadataValidator.MismatchedQualitySettingsValues);
             }
 
             if (firstResult.ScreenSettings != null)
             {
-                WriteClassNameWithFields<ScreenSettings>(rw, firstResult.ScreenSettings);
+                WriteClassNameWithFields<ScreenSettings>(rw, firstResult.ScreenSettings, metadataValidator.ScreenSettingsResultFiles, metadataValidator.MismatchedScreenSettingsValues);
             }
 
             if (firstResult.BuildSettings != null)
             {
-                WriteClassNameWithFields<BuildSettings>(rw, firstResult.BuildSettings);
+                WriteClassNameWithFields<BuildSettings>(rw, firstResult.BuildSettings, metadataValidator.BuildSettingsResultFiles, metadataValidator.MismatchedBuildSettingsValues);
             }
 
             if (firstResult.EditorVersion != null)
             {
-                WriteClassNameWithFields<EditorVersion>(rw, firstResult.EditorVersion, new[] { "DateSeconds", "RevisionValue" });
+                WriteClassNameWithFields<EditorVersion>(rw, firstResult.EditorVersion, metadataValidator.EditorVersionResultFiles, metadataValidator.MismatchedEditorVersionValues, new[] { "DateSeconds", "RevisionValue" }, true);
             }
             
             rw.WriteLine("</div>");
             rw.WriteLine("</div>");
         }
 
-        private void WriteClassNameWithFields<T>(StreamWriter rw, object instance, string[] excludedFields = null)
+        private void WriteClassNameWithFields<T>(StreamWriter rw, object instance, string[] resultFiles,
+            Dictionary<string, Dictionary<string, string>> mismatchedValues, string[] excludedFields = null, bool wideLayout = false)
         {
             var thisObject = (T)instance;
-            rw.WriteLine("<div><hr></div><div class=\"typename\">{0}</div><div><hr></div>", thisObject.GetType().Name);
-            rw.WriteLine("<div class=\"systeminfo\">");
+
+            rw.WriteLine("<div><hr></div><div class=\"{0}\">{1}</div><div><hr></div>", TypeHasMismatches(mismatchedValues, thisObject) ? "typenamewarning" : "typename",  thisObject.GetType().Name);
+            rw.WriteLine(wideLayout ? "<div class=\"systeminfowide\"><pre>" : "<div class=\"systeminfo\"><pre>");
+
             var sb = new StringBuilder();
             foreach (var field in thisObject.GetType().GetFields())
             {
+                
                 if (excludedFields != null && excludedFields.Contains(field.Name))
                 {
                     continue;
                 }
-
-                // if field is an IEnumberable, enumerate and append each value to the sb
-                if (typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string))
+                
+                if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
                 {
-                    sb.Append(string.Format("<div><div class=\"fieldname\">{0}:</div><div class=\"fieldvalue\">", field.Name));
-                    foreach (var enumerable in (IEnumerable) field.GetValue(thisObject))
+                    sb.Append("<div class=\"fieldgroupwarning\">");
+                    sb.Append(string.Format("<div class=\"fieldnamewarning\">{0}</div>", field.Name));
+
+                    var mismatchedValue = mismatchedValues[field.Name];
+
+                    sb.Append("<div class=\"fieldvaluewarning\">");
+                    sb.Append("<table class=\"warningtable\">");
+                    sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
+
+                    var baselineValue = string.Empty;
+                    for (var i = 0; i < resultFiles.Length; i++)
                     {
-                        sb.Append(enumerable + ",");
+                        if (i == 0)
+                        {
+                            baselineValue = mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
+                        }
+                         
+
+                        var resultFile = resultFiles[i];
+                        var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFile)) ?
+                            mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value :
+                            baselineValue;
+
+                        var pathParts = resultFile.Split('\\');
+                        var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
+
+                        
+                        sb.Append(string.Format("<tr><td {0} title={4}>{1}</td><td {0}>{2}</td><td {0}>{3}</td></tr>", value.Equals(baselineValue) ? "class=\"targetvalue\"" : string.Empty, value, pathParts[pathParts.Length - 1], path, i == 0 ? "\"Configuration used for comparison\"" : value.Equals(baselineValue) ? "\"Matching configuration\"" : "\"Mismatched configuration\""));
                     }
 
-                    if (sb.ToString().EndsWith(','))
-                    {
-                        // trim trailing comma
-                        sb.Length--;
-                    }
-                    
-                    sb.Append("</div></div>");
+                    sb.Append("</table></div>");
                 }
                 else
                 {
-                    sb.Append(string.Format("<div><div class=\"fieldname\">{0}:</div><div class=\"fieldvalue\">{1}</div></div>", field.Name, field.GetValue(thisObject)));
-
+                    sb.Append("<div class=\"fieldgroup\">");
+                    sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
+                    sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>", GetFieldValues(field, thisObject)));
                 }
+               
+                sb.Append("</div>");
             }
             rw.WriteLine(sb.ToString());
-            rw.WriteLine("</div>");
+            rw.WriteLine("</pre></div>");
+        }
+
+        private static bool TypeHasMismatches<T>(Dictionary<string, Dictionary<string, string>> mismatchedValues, T thisObject)
+        {
+            var names = thisObject.GetType().GetFields().Select(f => f.Name);
+            var hasMatches = names.Intersect(mismatchedValues.Keys).Any();
+            return mismatchedValues.Count > 0 && hasMatches;
+        }
+
+        private object GetFieldValues<T>(FieldInfo field, T thisObject)
+        {
+            return IsIEnumerableFieldType(field) ? ConvertIEnumberableToString(field, thisObject) : field.GetValue(thisObject);
+        }
+
+        private static bool IsIEnumerableFieldType(FieldInfo field)
+        {
+            return typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string);
+        }
+
+        private string ConvertIEnumberableToString<T>(FieldInfo field, T thisObject)
+        {
+            var sb = new StringBuilder();
+            foreach (var enumerable in (IEnumerable) field.GetValue(thisObject))
+            {
+                sb.Append(enumerable + ",");
+            }
+
+            if (sb.ToString().EndsWith(','))
+            {
+                // trim trailing comma
+                sb.Length--;
+            }
+
+            return sb.ToString();
         }
 
         private List<TestResult> GetResultsForThisTest(string distinctTestName)
@@ -753,6 +830,18 @@ rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML=\"Show Test C
                     .First(sg => ScrubStringForSafeForVariableUse(sg.SampleGroupName) == sampleGroupName).Threshold;
             }
             return threshold;
+        }
+
+        private int GetSampleCount(List<TestResult> resultsForThisTest, string sampleGroupName)
+        {
+            var sampleCount = 0;
+            if (resultsForThisTest.First().SampleGroupResults
+                .Any(sg => ScrubStringForSafeForVariableUse(sg.SampleGroupName) == sampleGroupName))
+            {
+                sampleCount = resultsForThisTest.First().SampleGroupResults
+                    .First(sg => ScrubStringForSafeForVariableUse(sg.SampleGroupName) == sampleGroupName).SampleCount;
+            }
+            return sampleCount;
         }
 
         private string GetAggregationType(List<TestResult> resultsForThisTest, string sampleGroupName)

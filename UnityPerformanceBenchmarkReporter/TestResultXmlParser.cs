@@ -113,7 +113,7 @@ namespace UnityPerformanceBenchmarkReporter
 
         private PerformanceTestResult TryDeserializePerformanceTestResultJsonObject(string json)
         {
-            PerformanceTestResult performanceTestResult = null;
+            PerformanceTestResult performanceTestResult;
             try
             {
                 performanceTestResult = JsonConvert.DeserializeObject<PerformanceTestResult>(json);
@@ -136,7 +136,7 @@ namespace UnityPerformanceBenchmarkReporter
 
         private PerformanceTestRun TryDeserializePerformanceTestRunJsonObject(string json)
         {
-            PerformanceTestRun performanceTestRun = null;
+            PerformanceTestRun performanceTestRun;
             try
             {
                 performanceTestRun = JsonConvert.DeserializeObject<PerformanceTestRun>(json);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace UnityPerformanceBenchmarkReporter
 {
@@ -14,7 +15,7 @@ namespace UnityPerformanceBenchmarkReporter
             }
             else
             {
-                var s = Convert.ToString(d);
+                var s = Convert.ToString(d, CultureInfo.InvariantCulture);
                 var parts = s.Split('.');
                 if (parts.Length <= 1 || parts[1].Length <= digits)
                 {
@@ -22,8 +23,9 @@ namespace UnityPerformanceBenchmarkReporter
                 }
                 else
                 {
-                    var newSigDigits = parts[1].Substring(0, (int) (digits == 0 ? digits : parts[1].Length - digits));
-                    truncated = Convert.ToUInt32(parts[0] + newSigDigits);
+                    var newSigDigits = parts[1].Substring(0, (int) digits);
+                    var truncString = string.Format("{0}.{1}", parts[0], newSigDigits);
+                    truncated = Convert.ToDouble(truncString);
                 }
             }
 

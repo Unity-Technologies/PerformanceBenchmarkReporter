@@ -12,6 +12,49 @@ h3 {
     overflow-wrap: break-word;
 }
 
+h5 {
+    font-size: 1vh;
+    overflow-wrap: break-word;
+}
+
+p {
+    line-height: 25%
+}
+
+th {
+    border-bottom-style: solid;
+    border-bottom-color: lightgray;
+}
+
+.targetvalue {
+    color: black;
+}
+
+.help {
+    width: 100%;
+}
+
+.toggleconfigwrapper {
+    display: inline-flex;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.helpwrapper {
+    display: inline;
+    background-image: url("help.png");
+    height: 4vh;
+    width: 4vh;
+    background-repeat: no-repeat;
+    float: right;
+    background-size: 100%;
+    padding: 10px;
+}
+
+    .helpwrapper:hover {
+        background-image: url("help2.png");
+    }
+
 .titletable {
     height: 80%;
     width: 100%;
@@ -27,6 +70,13 @@ h3 {
     width: 30%;
     vertical-align: bottom;
     max-width: 400px;
+}
+
+.warning {
+    width: 2vh;
+    vertical-align: middle;
+    max-width: 200px;
+    margin: 5px;
 }
 
 .titlecell {
@@ -50,20 +100,11 @@ h3 {
     display: none
 }
 
-.systeminfo > div {
-    display: inline-block;
-    *display: inline; /* For IE7 */
-    zoom: 1; /* Trigger hasLayout */
-    width: 15%;
-    text-align: left;
-    vertical-align: text-top;
-    font-size: small;
-    padding: 5px 5px 5px 5px;
-    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
-}
+
 
 .testnamecell {
     background-color: lightgray;
+    padding: 0px 5px 0px 5px;
 }
 
 .testname {
@@ -76,10 +117,10 @@ h3 {
     border: none;
     color: white;
     padding: 15px 25px;
-    text-align: center;
     cursor: pointer;
     border-radius: 4px;
     font-weight: bold;
+    margin: 5px 5px 5px 0px;
 }
 
 .button {
@@ -88,15 +129,41 @@ h3 {
     border: none;
     color: white;
     padding: 15px 25px;
-    text-align: center;
     cursor: pointer;
     border-radius: 4px;
     font-weight: bold;
+    margin: 5px 5px 5px 0px;
 }
 
-    .button:hover {
-        background-color: #2196F3 !important;
-    }
+div > .configwarning {
+    font-size: 1.25vh;
+    font-weight: bold;
+    visibility: hidden;
+    width: 120px;
+    background-color: #f28034;
+    color: white;
+    text-align: left;
+    border-radius: 4px;
+    z-index: 1;
+    top: -5px;
+    left: 105%;
+    padding: 10px 5px 5px 5px;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    margin: 5px;
+}
+
+div:hover > .configwarning {
+    visibility: visible;
+}
+
+
+.button:hover {
+    background-color: #2196F3 !important;
+}
+
+.flex {
+    display: flex;
+}
 
 .buttondiv {
     display: inline;
@@ -115,28 +182,105 @@ h3 {
 
 .showedfailedtests {
     padding: 5px 5px 5px 0px;
+    display: inline-flex;
+    align-items: flex-start;
+    width: 100%;
+}
+
+
+.systeminfo > div {
+    flex: 1 1 160px;
+    margin: 5px;
+}
+
+.systeminfowide > div {
+    flex: 1 1 160px;
+    margin: 5px;
 }
 
 .typename {
     text-align: left;
     font-weight: bold;
-    font-size: 1.25vh;
-    background-color: black;
+    font-size: 1.35vh;
+    background-color: lightgray;
+    color: black;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    padding: 5px 5px 5px 10px;
+}
+
+.typenamewarning {
+    text-align: left;
+    font-weight: bold;
+    font-size: 1.35vh;
+    background-color: #f28034;
     color: white;
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
     padding: 5px 5px 5px 10px;
 }
 
+.fieldgroup {
+    display: inline-block !important;
+    border: 1px solid lightgray;
+    border-radius: 4px;
+    margin: 5px;
+}
+
+.fieldgroupwarning {
+    display: inline-block !important;
+    border: 1px solid #f28034;
+    border-radius: 4px;
+    margin: 5px;
+}
+
 .fieldname {
     font-weight: bold;
-    font-size: 1.15vh;
+    font-size: 1.25vh;
     overflow-wrap: break-word;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    padding: 4px;
+}
+
+.fieldnamewarning {
+    background-color: #f28034;
+    color: white;
+    font-weight: bold;
+    font-size: 1.25vh;
+    overflow-wrap: break-word;
+    font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    padding: 4px;
 }
 
 .fieldvalue {
-    font-size: 1vh;
-    padding: 5px 5px 5px 0px;
-    overflow-wrap: break-word;
+    font-size: 1.1vh;
+    padding: 0px 4px 4px 4px;
+}
+
+.fieldvaluewarning {
+    font-size: 1.1vh;
+    color: #f28034;
+}
+
+.warningtable {
+    padding: 5px 5px 5px 5px;
+    width: 100%;
+    text-align: left;
+}
+
+    .warningtable > tbody > tr > td {
+        padding: 5px;
+    }
+
+    .warningtable > tbody > tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+pre {
+    white-space: pre-wrap; /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+    margin: 5px;
 }
 
 .containerLabel {
@@ -210,13 +354,13 @@ h3 {
 }
 
 .disabledContainerLabel {
+    font-size: 1.25vh important !;
     display: block;
     font-weight: bold;
     position: relative;
     padding-left: 35px;
     margin-bottom: 12px;
     cursor: pointer;
-    font-size: medium;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -232,18 +376,20 @@ h3 {
     }
 
     .disabledContainerLabel .tooltiptext {
+        font-size: 1.25vh;
         visibility: hidden;
         width: 120px;
         background-color: #2196F3;
         color: #fff;
-        text-align: center;
-        border-radius: 6px;
+        text-align: left;
+        border-radius: 4px;
         padding: 5px 0;
         z-index: 1;
         top: -5px;
         left: 105%;
-        padding: 5px 5px 5px 5px;
+        padding: 10px 5px 5px 5px;
         font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+        margin: 5px;
     }
 
     .disabledContainerLabel:hover .tooltiptext {
@@ -265,6 +411,9 @@ h3 {
 
 .chartcell {
     padding: 5px 5px 5px 10px;
+    border-width: 2px 0px 0px 0px;
+    border-style: solid;
+    border-color: darkgray;
 }
 
 .container {
