@@ -23,6 +23,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
             "help.png"
         };
 
+        private readonly Dictionary<string, string[]> excludedConfigFieldNames = new Dictionary<string, string[]>();
+
         private List<string> distinctTestNames;
         private List<string> distinctSampleGroupNames;
         private PerformanceTestRunResult baselineResults;
@@ -30,6 +32,14 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private uint thisSigFig;
         private bool thisHasBenchmarkResults;
         private MetadataValidator metadataValidator;
+
+        public ReportWriter(Dictionary<string, string[]> excludedTestConfigs = null)
+        {
+            if (excludedTestConfigs != null)
+            {
+                excludedConfigFieldNames = excludedTestConfigs;
+            }
+        }
 
         public void WriteReport(List<PerformanceTestRunResult> results, MetadataValidator mdValidator, uint sigFig = 2,
             string reportDirectoryPath = null, bool hasBenchmarkResults = false)
@@ -413,7 +423,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("responsiveAnimationDuration: 0,");
             rw.WriteLine("title: {");
             rw.WriteLine("	display: true,");
-            rw.WriteLine("	text: \"{0} Sample Group\"", distinctSampleGroupName);
+            rw.WriteLine("	text: \"{0}\"", distinctSampleGroupName);
             rw.WriteLine("}");
             rw.WriteLine("		}");
             rw.WriteLine("	});");
@@ -658,8 +668,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             var firstResult = perfTestRunResults.First();
 
-            rw.WriteLine("<div ng-hide=\"isCollapsed\" select-on-click>");
-            rw.WriteLine("<div id=\"testconfig\" class=\"testconfig\"> ");
+            rw.WriteLine("<div ng-hide=\"isCollapsed\" select-on-click><div id=\"testconfig\" class=\"testconfig\">");
 
             if (firstResult.PlayerSystemInfo != null)
             {
@@ -688,82 +697,117 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
             if (firstResult.EditorVersion != null)
             {
-                WriteClassNameWithFields<EditorVersion>(rw, firstResult.EditorVersion, metadataValidator.EditorVersionResultFiles, metadataValidator.MismatchedEditorVersionValues, new[] { "DateSeconds", "RevisionValue" }, true);
+                WriteClassNameWithFields<EditorVersion>(rw, firstResult.EditorVersion, metadataValidator.EditorVersionResultFiles, metadataValidator.MismatchedEditorVersionValues);
             }
-            
-            rw.WriteLine("</div>");
-            rw.WriteLine("</div>");
+
+            rw.WriteLine("</div></div>");
         }
 
         private void WriteClassNameWithFields<T>(StreamWriter rw, object instance, string[] resultFiles,
-            Dictionary<string, Dictionary<string, string>> mismatchedValues, string[] excludedFields = null, bool wideLayout = false)
+            Dictionary<string, Dictionary<string, string>> mismatchedValues)
         {
-            var thisObject = (T)instance;
+            var thisObject = (T) instance;
+            var excludedFieldNames = excludedConfigFieldNames.ContainsKey(typeof(T).Name)
+                ? excludedConfigFieldNames[typeof(T).Name]
+                : null;
 
-            rw.WriteLine("<div><hr></div><div class=\"{0}\">{1}</div><div><hr></div>", TypeHasMismatches(mismatchedValues, thisObject) ? "typenamewarning" : "typename",  thisObject.GetType().Name);
-            rw.WriteLine(wideLayout ? "<div class=\"systeminfowide\"><pre>" : "<div class=\"systeminfo\"><pre>");
+            var fieldNames = thisObject.GetType().GetFields().Select(f => f.Name);
 
-            var sb = new StringBuilder();
-            foreach (var field in thisObject.GetType().GetFields())
+
+            if (excludedFieldNames == null || !excludedFieldNames.Any() || excludedFieldNames.Any() &&
+                fieldNames.Any(k1 => excludedFieldNames.All(k2 => k2 != k1)))
             {
-                
-                if (excludedFields != null && excludedFields.Contains(field.Name))
+                rw.WriteLine("<div><hr></div><div class=\"{0}\">{1}</div><div><hr></div>",
+                    TypeHasValidMismatches(mismatchedValues, thisObject, excludedFieldNames)
+                        ? "typenamewarning"
+                        : "typename", thisObject.GetType().Name);
+
+                rw.WriteLine("<div class=\"systeminfo\"><pre>");
+
+                var sb = new StringBuilder();
+
+                foreach (var field in thisObject.GetType().GetFields())
                 {
-                    continue;
-                }
-                
-                if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
-                {
-                    sb.Append("<div class=\"fieldgroupwarning\">");
-                    sb.Append(string.Format("<div class=\"fieldnamewarning\">{0}</div>", field.Name));
 
-                    var mismatchedValue = mismatchedValues[field.Name];
-
-                    sb.Append("<div class=\"fieldvaluewarning\">");
-                    sb.Append("<table class=\"warningtable\">");
-                    sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
-
-                    var baselineValue = string.Empty;
-                    for (var i = 0; i < resultFiles.Length; i++)
+                    if (excludedFieldNames != null && excludedFieldNames.Contains(field.Name))
                     {
-                        if (i == 0)
-                        {
-                            baselineValue = mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
-                        }
-                         
-
-                        var resultFile = resultFiles[i];
-                        var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFile)) ?
-                            mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value :
-                            baselineValue;
-
-                        var pathParts = resultFile.Split('\\');
-                        var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
-
-                        
-                        sb.Append(string.Format("<tr><td {0} title={4}>{1}</td><td {0}>{2}</td><td {0}>{3}</td></tr>", value.Equals(baselineValue) ? "class=\"targetvalue\"" : string.Empty, value, pathParts[pathParts.Length - 1], path, i == 0 ? "\"Configuration used for comparison\"" : value.Equals(baselineValue) ? "\"Matching configuration\"" : "\"Mismatched configuration\""));
+                        continue;
                     }
 
-                    sb.Append("</table></div>");
+                    if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
+                    {
+                        sb.Append("<div class=\"fieldgroupwarning\">");
+                        sb.Append(string.Format("<div class=\"fieldnamewarning\">{0}</div>", field.Name));
+                        sb.Append("<div class=\"fieldvaluewarning\">");
+                        sb.Append("<table class=\"warningtable\">");
+                        sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
+
+                        var mismatchedValue = mismatchedValues[field.Name];
+
+                        var baselineValue = string.Empty;
+                        for (var i = 0; i < resultFiles.Length; i++)
+                        {
+                            if (i == 0)
+                            {
+                                baselineValue = mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
+                            }
+
+
+                            var resultFile = resultFiles[i];
+                            var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFile))
+                                ? mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value
+                                : baselineValue;
+
+                            var pathParts = resultFile.Split('\\');
+                            var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
+
+
+                            sb.Append(string.Format(
+                                "<tr><td {0} title={4}>{1}</td><td {0}>{2}</td><td {0}>{3}</td></tr>",
+                                value.Equals(baselineValue) ? "class=\"targetvalue\"" : string.Empty, value,
+                                pathParts[pathParts.Length - 1], path,
+                                i == 0 ? "\"Configuration used for comparison\"" :
+                                value.Equals(baselineValue) ? "\"Matching configuration\"" :
+                                "\"Mismatched configuration\""));
+                        }
+
+                        sb.Append("</table></div>");
+                    }
+                    else
+                    {
+                        sb.Append("<div class=\"fieldgroup\">");
+                        sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
+                        sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>",
+                            GetFieldValues(field, thisObject)));
+                    }
+
+                    sb.Append("</div>");
                 }
-                else
-                {
-                    sb.Append("<div class=\"fieldgroup\">");
-                    sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
-                    sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>", GetFieldValues(field, thisObject)));
-                }
-               
-                sb.Append("</div>");
+
+                rw.WriteLine(sb.ToString());
+                rw.WriteLine("</pre></div>");
             }
-            rw.WriteLine(sb.ToString());
-            rw.WriteLine("</pre></div>");
         }
 
-        private static bool TypeHasMismatches<T>(Dictionary<string, Dictionary<string, string>> mismatchedValues, T thisObject)
+        private static bool TypeHasValidMismatches<T>(Dictionary<string, Dictionary<string, string>> mismatchedValues, T thisObject, string[] excludedFields = null)
         {
-            var names = thisObject.GetType().GetFields().Select(f => f.Name);
-            var hasMatches = names.Intersect(mismatchedValues.Keys).Any();
-            return mismatchedValues.Count > 0 && hasMatches;
+            bool hasValidMismatches = false;
+
+            IEnumerable<string> validMismatches = new List<string>();
+
+            if (excludedFields != null)
+            {
+                validMismatches = mismatchedValues.Keys.Where(k1 => excludedFields.All(k2 => k2 != k1));
+            }
+
+            if (validMismatches.Any())
+            {
+                var names = thisObject.GetType().GetFields().Select(f => f.Name);
+                var hasMatches = names.Intersect(mismatchedValues.Keys).Any();
+                hasValidMismatches = mismatchedValues.Count > 0 && hasMatches;
+            }
+
+            return hasValidMismatches;
         }
 
         private object GetFieldValues<T>(FieldInfo field, T thisObject)

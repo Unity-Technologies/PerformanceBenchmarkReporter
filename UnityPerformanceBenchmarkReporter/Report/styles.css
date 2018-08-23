@@ -354,7 +354,7 @@ pre {
 }
 
 .disabledContainerLabel {
-    font-size: 1.25vh important !;
+    font-size: 1.25vh;
     display: block;
     font-weight: bold;
     position: relative;
