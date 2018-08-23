@@ -23,19 +23,25 @@ namespace UnityPerformanceBenchmarkReporter
         private PerformanceTestRun firstTestRun = new PerformanceTestRun();
         private readonly PerformanceTestRunProcessor performanceTestRunProcessor = new PerformanceTestRunProcessor();
         private readonly string xmlFileExtension = ".xml";
+        private readonly Dictionary<string, string[]> excludedConfigFieldNames = new Dictionary<string, string[]>();
 
 
         public bool BaselineResultFilesExist => BaselineXmlFilePaths.Any() || BaselineXmlDirectoryPaths.Any();
 
         public bool ResultFilesExist => ResultXmlFilePaths.Any() || ResultXmlDirectoryPaths.Any();
 
-        public PerformanceBenchmark()
+        public PerformanceBenchmark(Dictionary<string, string[]> configFieldNames = null)
         {
             // Default significant figures to use for non-integer metrics if user doesn't specify another value.
             // Most values are in milliseconds or a count of something, so using more often creates an artificial baseline
             // failure based on insignificant digits equating to a microsecond, or less, time difference. The Unity Profiler only shows
-            // up to three significant figures for milliseconds as well.
+            // up to 2 significant figures for milliseconds as well, so this is what folks are used to working with.
             SigFig = 2;
+
+            if (configFieldNames != null)
+            {
+                excludedConfigFieldNames = configFieldNames;
+            }
         }
 
         public void AddPerformanceTestRunResults(
@@ -55,7 +61,7 @@ namespace UnityPerformanceBenchmarkReporter
             AddTestResults(testResultXmlParser, baselinePerformanceTestRunResults, baselineTestResults, baselineTestResults, BaselineXmlDirectoryPaths, BaselineXmlFilePaths, true);
         }
 
-        public void AddTestResults(
+        private void AddTestResults(
             TestResultXmlParser testResultXmlParser,  
             List<PerformanceTestRunResult> runResults, 
             List<TestResult> testResults, 
@@ -140,13 +146,20 @@ namespace UnityPerformanceBenchmarkReporter
             }
             else
             {
-                MetadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
-                MetadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
-                MetadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
-                MetadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
-                MetadataValidator.ValidateBuildSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
-                MetadataValidator.ValidateEditorVersion(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath);
+                MetadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<PlayerSystemInfo>());
+                MetadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<PlayerSettings>());
+                MetadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<QualitySettings>());
+                MetadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<ScreenSettings>());
+                MetadataValidator.ValidateBuildSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<BuildSettings>());
+                MetadataValidator.ValidateEditorVersion(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<EditorVersion>());
             }
+        }
+
+        private string[] ExcludedFieldNames<T>()
+        {
+            return excludedConfigFieldNames.ContainsKey(typeof(T).Name)
+                ? excludedConfigFieldNames[typeof(T).Name]
+                : null;
         }
 
         public void AddXmlSourcePath(string xmlSourcePath, string optionName, OptionsParser.ResultType resultType)

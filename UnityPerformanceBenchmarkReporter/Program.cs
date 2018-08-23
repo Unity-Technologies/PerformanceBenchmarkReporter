@@ -8,6 +8,11 @@ namespace UnityPerformanceBenchmarkReporter
 {
     internal class Program
     {
+        private static readonly Dictionary<string, string[]> ExcludedConfigFieldNames = new Dictionary<string, string[]>
+        {
+            {typeof(EditorVersion).Name, new []{"DateSeconds", "RevisionValue", "Branch"}}
+        };
+
         private static void Main(string[] args)
         {
             var aggregateTestRunResults = new List<PerformanceTestRunResult>();
@@ -15,7 +20,7 @@ namespace UnityPerformanceBenchmarkReporter
             var baselineTestResults = new List<TestResult>();
             var performanceTestRunResults = new List<PerformanceTestRunResult>();
             var testResults = new List<TestResult>();
-            var performanceBenchmark = new PerformanceBenchmark();
+            var performanceBenchmark = new PerformanceBenchmark(ExcludedConfigFieldNames);
             var optionsParser = new OptionsParser();
 
             optionsParser.ParseOptions(performanceBenchmark, args);
@@ -49,8 +54,13 @@ namespace UnityPerformanceBenchmarkReporter
                 }
             }
 
-            var reportWriter = new ReportWriter();
-            reportWriter.WriteReport(aggregateTestRunResults, performanceBenchmark.MetadataValidator, performanceBenchmark.SigFig, performanceBenchmark.ReportDirPath, performanceBenchmark.BaselineResultFilesExist);
+            var reportWriter = new ReportWriter(ExcludedConfigFieldNames);
+            reportWriter.WriteReport(
+                aggregateTestRunResults, 
+                performanceBenchmark.MetadataValidator, 
+                performanceBenchmark.SigFig, 
+                performanceBenchmark.ReportDirPath, 
+                performanceBenchmark.BaselineResultFilesExist);
         }
     }
 }
