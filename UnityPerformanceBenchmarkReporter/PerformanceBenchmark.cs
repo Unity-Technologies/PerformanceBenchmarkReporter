@@ -70,7 +70,7 @@ namespace UnityPerformanceBenchmarkReporter
             HashSet<string> xmlFileNamePaths,
             bool isBaseline = false)
         {
-            if (xmlDirectoryPaths.Any())
+            if (!isBaseline && xmlDirectoryPaths.Any())
             {
                 foreach (var xmlDirectory in xmlDirectoryPaths)
                 {
