@@ -423,6 +423,7 @@ pre {
     width: 99%;
     height: 18vh;
     font-family: 'Arial', 'Helvetica', 'Helvetica Neue', sans-serif;
+    min-height: 200px;
 }
 
 .divider {
