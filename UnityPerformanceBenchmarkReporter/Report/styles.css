@@ -52,7 +52,7 @@ th {
 }
 
     .helpwrapper:hover {
-        background-image: url("help2.png");
+        background-image: url("help-hover.png");
     }
 
 .titletable {
@@ -223,6 +223,7 @@ div:hover > .configwarning {
     border: 1px solid lightgray;
     border-radius: 4px;
     margin: 5px;
+    vertical-align: top;
 }
 
 .fieldgroupwarning {
@@ -230,6 +231,7 @@ div:hover > .configwarning {
     border: 1px solid #f28034;
     border-radius: 4px;
     margin: 5px;
+    vertical-align: top;
 }
 
 .fieldname {
