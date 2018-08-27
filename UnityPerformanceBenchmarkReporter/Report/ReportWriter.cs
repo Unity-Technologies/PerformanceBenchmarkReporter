@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityPerformanceBenchmarkReporter.Entities;
+using System.Runtime.InteropServices;
 
 namespace UnityPerformanceBenchmarkReporter.Report
 {
@@ -34,6 +35,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private bool thisHasBenchmarkResults;
         private MetadataValidator metadataValidator;
         private bool vrSupported = false;
+        private char pathSeperator = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? '\\' : '/';
 
         public ReportWriter(Dictionary<string, string[]> excludedTestConfigs = null)
         {
@@ -101,7 +103,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private void WriteEmbeddedResourceFiles(DirectoryInfo benchmarkDirectory)
         {
-            var assemblyNameParts = Assembly.GetExecutingAssembly().Location.Split('\\');
+            var assemblyNameParts = Assembly.GetExecutingAssembly().Location.Split(pathSeperator);
+
             var assemblyName = assemblyNameParts[assemblyNameParts.Length - 1].Split('.')[0];
 
             foreach (var embeddedResourceName in embeddedResourceNames)
@@ -468,6 +471,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private void WriteHeader(StreamWriter rw)
         {
             rw.WriteLine("<head>");
+            rw.WriteLine("<meta charset=\"utf-8\"/>");
             rw.WriteLine("<title>Unity Performance Benchmark Report</title>");
             rw.WriteLine("<script src=\"Chart.bundle.js\"></script>");
             rw.WriteLine("<link rel=\"stylesheet\" href=\"styles.css\">");
@@ -766,8 +770,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
                                 ? mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value
                                 : baselineValue;
 
-                            var pathParts = resultFile.Split('\\');
-                            var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
+                            var pathParts = resultFile.Split(pathSeperator);
+                            var path = string.Join(pathSeperator, pathParts.Take(pathParts.Length - 1));
 
 
                             sb.Append(string.Format(
