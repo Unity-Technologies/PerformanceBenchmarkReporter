@@ -10,7 +10,8 @@ namespace UnityPerformanceBenchmarkReporter
     {
         private static readonly Dictionary<string, string[]> ExcludedConfigFieldNames = new Dictionary<string, string[]>
         {
-            {typeof(EditorVersion).Name, new []{"DateSeconds", "RevisionValue", "Branch"}}
+            {typeof(EditorVersion).Name, new []{"DateSeconds", "RevisionValue", "Branch"}},
+            {typeof(PlayerSettings).Name, new []{"MtRendering", "GraphicsJobs"}}
         };
 
         private static void Main(string[] args)

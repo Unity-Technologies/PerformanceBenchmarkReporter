@@ -43,7 +43,7 @@ namespace UnityPerformanceBenchmarkReporter
 
                 if (!performanceBenchmark.ResultXmlFilePaths.Any() && !performanceBenchmark.ResultXmlDirectoryPaths.Any())
                 {
-                    ShowHelp("Missing required option --testresultsxmlsource=(filePath|directoryPath)", os);
+                    ShowHelp("Missing required option --results=(filePath|directoryPath)", os);
                 }
 
                 if (remaining.Any())

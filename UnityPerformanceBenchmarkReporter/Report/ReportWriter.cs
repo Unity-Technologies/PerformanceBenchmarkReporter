@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityPerformanceBenchmarkReporter.Entities;
+using System.Runtime.InteropServices;
 
 namespace UnityPerformanceBenchmarkReporter.Report
 {
@@ -20,7 +21,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
             "styles.css",
             "UnityLogo.png",
             "warning.png",
-            "help.png"
+            "help.png",
+            "help-hover.png"
         };
 
         private readonly Dictionary<string, string[]> excludedConfigFieldNames = new Dictionary<string, string[]>();
@@ -32,6 +34,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private uint thisSigFig;
         private bool thisHasBenchmarkResults;
         private MetadataValidator metadataValidator;
+        private bool vrSupported = false;
+        private char pathSeperator = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? '\\' : '/';
 
         public ReportWriter(Dictionary<string, string[]> excludedTestConfigs = null)
         {
@@ -99,7 +103,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private void WriteEmbeddedResourceFiles(DirectoryInfo benchmarkDirectory)
         {
-            var assemblyNameParts = Assembly.GetExecutingAssembly().Location.Split('\\');
+            var assemblyNameParts = Assembly.GetExecutingAssembly().Location.Split(pathSeperator);
+
             var assemblyName = assemblyNameParts[assemblyNameParts.Length - 1].Split('.')[0];
 
             foreach (var embeddedResourceName in embeddedResourceNames)
@@ -466,6 +471,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private void WriteHeader(StreamWriter rw)
         {
             rw.WriteLine("<head>");
+            rw.WriteLine("<meta charset=\"utf-8\"/>");
             rw.WriteLine("<title>Unity Performance Benchmark Report</title>");
             rw.WriteLine("<script src=\"Chart.bundle.js\"></script>");
             rw.WriteLine("<link rel=\"stylesheet\" href=\"styles.css\">");
@@ -726,9 +732,15 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
                 var sb = new StringBuilder();
 
+                if (thisObject.GetType().GetFields().Any(f => f.Name.Equals("VrSupported")))
+                {
+                     vrSupported = (bool)thisObject.GetType().GetFields().First(f => f.Name.Equals("VrSupported")).GetValue(thisObject);
+                }
+
+                
+
                 foreach (var field in thisObject.GetType().GetFields())
                 {
-
                     if (excludedFieldNames != null && excludedFieldNames.Contains(field.Name))
                     {
                         continue;
@@ -758,8 +770,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
                                 ? mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value
                                 : baselineValue;
 
-                            var pathParts = resultFile.Split('\\');
-                            var path = string.Join('\\', pathParts.Take(pathParts.Length - 1));
+                            var pathParts = resultFile.Split(pathSeperator);
+                            var path = string.Join(pathSeperator, pathParts.Take(pathParts.Length - 1));
 
 
                             sb.Append(string.Format(
@@ -812,10 +824,18 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private object GetFieldValues<T>(FieldInfo field, T thisObject)
         {
-            return IsIEnumerableFieldType(field) ? ConvertIEnumberableToString(field, thisObject) : field.GetValue(thisObject);
+            return IsIEnumerableFieldType(field) ? ConvertIEnumberableToString(field, thisObject) : GetValue(field, thisObject);
         }
 
-        private static bool IsIEnumerableFieldType(FieldInfo field)
+        private object GetValue<T>(FieldInfo field, T thisObject)
+        {
+            return 
+                 (field.Name.Equals("StereoRenderingPath") || field.Name.Equals("XrModel") || field.Name.Equals("XrDevice")) && !vrSupported ? 
+                    "None" : 
+                    field.GetValue(thisObject);
+        }
+
+        private bool IsIEnumerableFieldType(FieldInfo field)
         {
             return typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string);
         }
@@ -823,15 +843,23 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private string ConvertIEnumberableToString<T>(FieldInfo field, T thisObject)
         {
             var sb = new StringBuilder();
-            foreach (var enumerable in (IEnumerable) field.GetValue(thisObject))
+            var fieldValues = ((IEnumerable) field.GetValue(thisObject)) as List<string>;
+            if (fieldValues != null && fieldValues.Any())
             {
-                sb.Append(enumerable + ",");
-            }
+                foreach (var enumerable in fieldValues)
+                {
+                    sb.Append(enumerable + ",");
+                }
 
-            if (sb.ToString().EndsWith(','))
+                if (sb.ToString().EndsWith(','))
+                {
+                    // trim trailing comma
+                    sb.Length--;
+                }
+            }
+            else
             {
-                // trim trailing comma
-                sb.Length--;
+                sb.Append("None");
             }
 
             return sb.ToString();
