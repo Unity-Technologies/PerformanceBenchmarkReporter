@@ -667,11 +667,9 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private void WriteTestConfigTable(StreamWriter rw)
         {
-            //rw.WriteLine("<div ng-hide=\"isCollapsed\" select-on-click><div id=\"testconfig\" class=\"testconfig\">");
             rw.WriteLine("<div id=\"testconfig\" class=\"testconfig\">");
             WriteClassNameWithFields(rw);
             rw.WriteLine("</div></div>");
-            //rw.WriteLine("</div>");
         }
 
         private void WriteClassNameWithFields(StreamWriter rw)
@@ -680,7 +678,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             foreach (var typeMetadata in typeMetadatas)
             {
                 
-                rw.WriteLine("<div><hr></div><div class=\"{0}\">{1}</div><div><hr></div>",
+                rw.WriteLine("<div><hr/></div><div class=\"{0}\">{1}</div><div><hr/></div>",
                     typeMetadata.HasMismatches
                         ? "typenamewarning"
                         : "typename", typeMetadata.TypeName);
@@ -724,7 +722,6 @@ namespace UnityPerformanceBenchmarkReporter.Report
                             sb.Append("</div>");
                         }
                     }
-                    sb.Append("</div>");
                 }
                 else
                 {
@@ -732,7 +729,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
                 }
 
                 rw.WriteLine(sb.ToString());
-                rw.WriteLine("</pre>");
+                rw.WriteLine("</pre></div>");
             }
         }
 
