@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,8 +12,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
 {
     public class ReportWriter
     {
-        private readonly string unityPerformanceBenchmarkName = "UnityPerformanceBenchmark";
-        private readonly List<PerformanceTestRunResult> perfTestRunResults = new List<PerformanceTestRunResult>();
+        private readonly string perfBenchmarkReportName = "UnityPerformanceBenchmark";
+        private PerformanceTestRunResult[] perfTestRunResults = new PerformanceTestRunResult[] { };
         private readonly HashSet<string> embeddedResourceNames = new HashSet<string>
         {
             "Chart.bundle.js",
@@ -23,34 +22,29 @@ namespace UnityPerformanceBenchmarkReporter.Report
             "warning.png",
             "help.png",
             "help-hover.png"
-        };
-
-        private readonly Dictionary<string, string[]> excludedConfigFieldNames = new Dictionary<string, string[]>();
-
+        };        
+        
         private List<string> distinctTestNames;
         private List<string> distinctSampleGroupNames;
         private PerformanceTestRunResult baselineResults;
         private readonly Regex illegalCharacterScrubberRegex = new Regex("[^0-9a-zA-Z]", RegexOptions.Compiled);
         private uint thisSigFig;
         private bool thisHasBenchmarkResults;
-        private MetadataValidator metadataValidator;
-        private bool vrSupported = false;
-        private char pathSeperator = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? '\\' : '/';
+        private readonly TestRunMetadataProcessor testRunMetadataProcessor;
+        private readonly char pathSeperator = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? '\\' : '/';
+        private string perfBenchmarkReportNameFormat;
+        private readonly string noMetadataString = "Metadata not available for any of the test runs.";
 
-        public ReportWriter(Dictionary<string, string[]> excludedTestConfigs = null)
+        public ReportWriter(TestRunMetadataProcessor metadataProcessor)
         {
-            if (excludedTestConfigs != null)
-            {
-                excludedConfigFieldNames = excludedTestConfigs;
-            }
+            testRunMetadataProcessor = metadataProcessor;
         }
 
-        public void WriteReport(List<PerformanceTestRunResult> results, MetadataValidator mdValidator, uint sigFig = 2,
+        public void WriteReport(List<PerformanceTestRunResult> results, uint sigFig = 2,
             string reportDirectoryPath = null, bool hasBenchmarkResults = false)
         {
             if (results != null && results.Count > 0)
             {
-                metadataValidator = mdValidator;
                 thisSigFig = sigFig;
                 thisHasBenchmarkResults = hasBenchmarkResults;
                 EnsureOrderedResults(results);
@@ -73,10 +67,10 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private FileStream GetBenchmarkReportFile(DirectoryInfo benchmarkDirectory)
         {
+            perfBenchmarkReportNameFormat = "{0}_{1:yyyy-MM-dd_hh-mm-ss-fff}.html";
             var htmlFileName = Path.Combine(benchmarkDirectory.FullName,
-                string.Format("{0}_{1:yyyy-MM-dd_hh-mm-ss-fff}.html", unityPerformanceBenchmarkName, DateTime.Now));
-            var benchmarkReportFile = TryCreateHtmlFile(htmlFileName);
-            return benchmarkReportFile;
+                string.Format(perfBenchmarkReportNameFormat, perfBenchmarkReportName, DateTime.Now));
+            return TryCreateHtmlFile(htmlFileName);
         }
 
         private DirectoryInfo EnsureBenchmarkDirectory(string reportDirectoryPath)
@@ -84,7 +78,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             var reportDirPath = !string.IsNullOrEmpty(reportDirectoryPath)
                 ? reportDirectoryPath
                 : Directory.GetCurrentDirectory();
-            var benchmarkDirectory = Directory.CreateDirectory(Path.Combine(reportDirPath, unityPerformanceBenchmarkName));
+            var benchmarkDirectory = Directory.CreateDirectory(Path.Combine(reportDirPath, perfBenchmarkReportName));
             return benchmarkDirectory;
         }
 
@@ -159,10 +153,10 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             streamWriter.WriteLine("<body>");
             WriteLogoWithTitle(streamWriter);
-            if (TestRunSettingsExist())
-            {
+            //if (TestRunSettingsExist())
+            //{
                 WriteTestConfig(streamWriter);
-            }
+            //}
             WriteStatMethodTable(streamWriter);
             WriteTestTableWithVisualizations(streamWriter);
             streamWriter.WriteLine("</body>");
@@ -212,28 +206,15 @@ namespace UnityPerformanceBenchmarkReporter.Report
             streamWriter.WriteLine("<span class=\"checkmark\"></span></label></div></td></tr>");
         }
 
-        private bool TestRunSettingsExist()
-        {
-            var firstResult = perfTestRunResults.First();
-            return firstResult.PlayerSystemInfo != null
-                    || firstResult.PlayerSettings != null
-                    || firstResult.QualitySettings != null
-                    || firstResult.ScreenSettings != null
-                    || firstResult.BuildSettings != null
-                    || firstResult.EditorVersion != null;
-        }
-
         private void WriteShowTestConfigButton(StreamWriter rw)
         {
 
             rw.WriteLine(
                 "<div class=\"toggleconfigwrapper\"><button id=\"toggleconfig\" class=\"button\" onclick=\"showTestConfiguration()\">{0}Show Test Configuration</button>{1}</div><a title=\"Help\" class=\"help\" href=\"https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki\" target=\"_blank\"><div class=\"helpwrapper\"></div></a>",
-                metadataValidator.MismatchesExist
-                    ? "<image class=\"warning\" src=\"warning.png\"></img>"
+                testRunMetadataProcessor.TypeMetadata.Any(m=>m.HasMismatches) || testRunMetadataProcessor.TypeMetadata.All(m=>m.ValidResultCount == 0)
+                    ? "<image class=\"warning\" src=\"warning.png\" alt=\"Mismatched test configurations present.\"></img>"
                     : string.Empty,
-                metadataValidator.MismatchesExist
-                    ? "<span class=\"configwarning\">Mismatched test configurations present</span>"
-                    : string.Empty);
+                testRunMetadataProcessor.TypeMetadata.Any(m=>m.HasMismatches) ? "<span class=\"configwarning\">Mismatched test configurations present</span>" : testRunMetadataProcessor.TypeMetadata.All(m=>m.ValidResultCount == 0) ? string.Format("<span class=\"configwarning\"><div class=\"fieldname\">{0}</div></span>", noMetadataString) : string.Empty);
         }
 
         private void WriteJavaScript(StreamWriter rw)
@@ -242,79 +223,20 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("var failColor = \"rgba(255, 99, 132,0.5)\";");
             rw.WriteLine("var passColor = \"rgba(54, 162, 235,0.5)\";");
             rw.WriteLine("var baselineColor = \"rgb(255, 159, 64)\";");
-
             WriteShowTestConfigurationOnClickEvent(rw);
             WriteToggleCanvasWithNoFailures(rw);
-
             WriteTestRunArray(rw);
             WriteValueArrays(rw);
-
-            foreach (var distinctTestName in distinctTestNames)
-            {
-                var resultsForThisTest = GetResultsForThisTest(distinctTestName);
-                foreach (var distinctSampleGroupName in distinctSampleGroupNames)
-                {
-                    if (!SampleGroupHasSamples(resultsForThisTest, distinctSampleGroupName)) continue;
-
-                    var canvasId = GetCanvasId(distinctTestName, distinctSampleGroupName);
-                    var format = string.Format("var {0}_data = {{", canvasId);
-                    rw.WriteLine(format);
-                    rw.WriteLine("	labels: testRuns,");
-                    rw.WriteLine("	datasets: [{");
-                    var resultColors = new StringBuilder();
-                    resultColors.Append("		backgroundColor: [");
-
-                   foreach (var testResult in resultsForThisTest)
-                    {
-                        if (testResult.SampleGroupResults.Any(r =>
-                            ScrubStringForSafeForVariableUse(r.SampleGroupName).Equals(distinctSampleGroupName)))
-                        {
-                            var sampleGroupResult = testResult.SampleGroupResults.First(r =>
-                                ScrubStringForSafeForVariableUse(r.SampleGroupName).Equals(distinctSampleGroupName));
-                            resultColors.Append(sampleGroupResult.Regressed ? "failColor, " : "passColor, ");
-                        }
-                        else
-                        {
-                            resultColors.Append("passColor, ");
-                        }
-                    }
-
-                    var sampleUnit = GetSampleUnit(resultsForThisTest, distinctSampleGroupName);
-
-                    // remove trailing comma
-                    resultColors.Length = resultColors.Length - 2;
-                    resultColors.Append("],");
-                    rw.WriteLine(resultColors.ToString());
-                    rw.WriteLine("		borderWidth: 1,");
-                    rw.WriteLine("		label: \"" + (sampleUnit.Equals("None") ? distinctSampleGroupName : sampleUnit) + "\",");
-                    rw.WriteLine("		legend: {");
-                    rw.WriteLine("display: true,");
-                    rw.WriteLine("		},");
-                    rw.WriteLine("		data: {0}", string.Format("{0}_Aggregated_Values", canvasId));
-                    rw.WriteLine("	}");
-
-                    if (baselineResults != null)
-                    {
-                        rw.WriteLine("	,{");
-                        rw.WriteLine("		borderColor: baselineColor,");
-                        rw.WriteLine("		backgroundColor: baselineColor,");
-                        rw.WriteLine("		borderWidth: 2,");
-                        rw.WriteLine("		fill: false,");
-                        rw.WriteLine("		pointStyle: 'line',");
-                        rw.WriteLine("		label: \"" + (sampleUnit.Equals("None") ? "Baseline " + distinctSampleGroupName : "Baseline " + sampleUnit) + "\",");
-                        rw.WriteLine("		legend: {");
-                        rw.WriteLine("display: true,");
-                        rw.WriteLine("		},");
-                        rw.WriteLine("		data: {0}", string.Format("{0}_Baseline_Values,", canvasId));
-                        rw.WriteLine("		type: 'line'}");
-                    }
-
-                    rw.WriteLine("	]");
-                    rw.WriteLine("};");
-                }
-            }
-
+            WriteSampleGroupChartDefinitions(rw);
             rw.WriteLine("window.onload = function() {");
+            WriteSampleGroupChartConfigs(rw);
+            WriteStatMethodButtonEventListeners(rw);
+            rw.WriteLine("};");
+            rw.WriteLine("</script>");
+        }
+
+        private void WriteSampleGroupChartConfigs(StreamWriter rw)
+        {
             foreach (var distinctTestName in distinctTestNames)
             {
                 var resultsForThisTest = GetResultsForThisTest(distinctTestName);
@@ -324,12 +246,87 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     {
                         continue;
                     }
-                    WriteChartConfigForSampleGroup(rw, resultsForThisTest, distinctSampleGroupName, distinctTestName);
+
+                    WriteSampleGroupChartConfig(rw, resultsForThisTest, distinctSampleGroupName, distinctTestName);
                 }
             }
-            WriteStatMethodButtonEventListeners(rw);
+        }
+
+        private void WriteSampleGroupChartDefinitions(StreamWriter rw)
+        {
+            foreach (var distinctTestName in distinctTestNames)
+            {
+                var resultsForThisTest = GetResultsForThisTest(distinctTestName);
+                foreach (var distinctSampleGroupName in distinctSampleGroupNames)
+                {
+                    WriteSampleGroupChartDefinition(rw, resultsForThisTest, distinctSampleGroupName, distinctTestName);
+                }
+            }
+        }
+
+        private void WriteSampleGroupChartDefinition(StreamWriter rw, List<TestResult> resultsForThisTest, string distinctSampleGroupName,
+            string distinctTestName)
+        {
+            if (!SampleGroupHasSamples(resultsForThisTest, distinctSampleGroupName)) return;
+
+            var canvasId = GetCanvasId(distinctTestName, distinctSampleGroupName);
+            var format = string.Format("var {0}_data = {{", canvasId);
+            rw.WriteLine(format);
+            rw.WriteLine("	labels: testRuns,");
+            rw.WriteLine("	datasets: [{");
+            var resultColors = new StringBuilder();
+            resultColors.Append("backgroundColor: [");
+
+            foreach (var testResult in resultsForThisTest)
+            {
+                if (testResult.SampleGroupResults.Any(r =>
+                    ScrubStringForSafeForVariableUse(r.SampleGroupName).Equals(distinctSampleGroupName)))
+                {
+                    var sampleGroupResult = testResult.SampleGroupResults.First(r =>
+                        ScrubStringForSafeForVariableUse(r.SampleGroupName).Equals(distinctSampleGroupName));
+                    resultColors.Append(sampleGroupResult.Regressed ? "failColor, " : "passColor, ");
+                }
+                else
+                {
+                    resultColors.Append("passColor, ");
+                }
+            }
+
+            var sampleUnit = GetSampleUnit(resultsForThisTest, distinctSampleGroupName);
+
+            // remove trailing comma
+            resultColors.Length = resultColors.Length - 2;
+
+            resultColors.Append("],");
+            rw.WriteLine(resultColors.ToString());
+            rw.WriteLine("borderWidth: 1,");
+            rw.WriteLine("label: \"" + (sampleUnit.Equals("None") ? distinctSampleGroupName : sampleUnit) + "\",");
+            rw.WriteLine("legend: {");
+            rw.WriteLine("display: true,");
+            rw.WriteLine("},");
+            rw.WriteLine("data: {0}", string.Format("{0}_Aggregated_Values", canvasId));
+            rw.WriteLine("	}");
+
+            if (baselineResults != null)
+            {
+                rw.WriteLine("	,{");
+                rw.WriteLine("borderColor: baselineColor,");
+                rw.WriteLine("backgroundColor: baselineColor,");
+                rw.WriteLine("borderWidth: 2,");
+                rw.WriteLine("fill: false,");
+                rw.WriteLine("pointStyle: 'line',");
+                rw.WriteLine("label: \"" +
+                             (sampleUnit.Equals("None") ? "Baseline " + distinctSampleGroupName : "Baseline " + sampleUnit) +
+                             "\",");
+                rw.WriteLine("legend: {");
+                rw.WriteLine("display: true,");
+                rw.WriteLine("},");
+                rw.WriteLine("data: {0}", string.Format("{0}_Baseline_Values,", canvasId));
+                rw.WriteLine("type: 'line'}");
+            }
+
+            rw.WriteLine("	]");
             rw.WriteLine("};");
-            rw.WriteLine("</script>");
         }
 
         private void WriteStatMethodButtonEventListeners(StreamWriter rw)
@@ -366,12 +363,11 @@ namespace UnityPerformanceBenchmarkReporter.Report
                         count++;
                     }
                 }
-
                 rw.WriteLine("	 });");
             }
         }
 
-        private void WriteChartConfigForSampleGroup(StreamWriter rw, List<TestResult> resultsForThisTest, string distinctSampleGroupName,
+        private void WriteSampleGroupChartConfig(StreamWriter rw, List<TestResult> resultsForThisTest, string distinctSampleGroupName,
             string distinctTestName)
         {
             var aggregationType = GetAggregationType(resultsForThisTest, distinctSampleGroupName);
@@ -404,24 +400,24 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("maintainAspectRatio: false,");
             rw.WriteLine("scales: {");
             rw.WriteLine("	yAxes: [{");
-            rw.WriteLine("		display: true,");
-            rw.WriteLine("		scaleLabel:");
-            rw.WriteLine("		{");
-            rw.WriteLine("		    display: true,");
-            rw.WriteLine("		    labelString: \"{0} {1}\"", aggregationType, !sampleUnit.Equals("None") ? sampleUnit : distinctSampleGroupName);
-            rw.WriteLine("		},");
-            rw.WriteLine("		ticks: {");
+            rw.WriteLine("display: true,");
+            rw.WriteLine("scaleLabel:");
+            rw.WriteLine("{");
+            rw.WriteLine("    display: true,");
+            rw.WriteLine("    labelString: \"{0} {1}\"", aggregationType, !sampleUnit.Equals("None") ? sampleUnit : distinctSampleGroupName);
+            rw.WriteLine("},");
+            rw.WriteLine("ticks: {");
             rw.WriteLine("suggestedMax: .001,");
             rw.WriteLine("suggestedMin: .0");
-            rw.WriteLine("		}");
+            rw.WriteLine("}");
             rw.WriteLine("	}],");
             rw.WriteLine("	xAxes: [{");
-            rw.WriteLine("		display: true,");
-            rw.WriteLine("		scaleLabel:");
-            rw.WriteLine("		{");
-            rw.WriteLine("		    display: true,");
-            rw.WriteLine("		    labelString: \"Result File\"");
-            rw.WriteLine("		}");
+            rw.WriteLine("display: true,");
+            rw.WriteLine("scaleLabel:");
+            rw.WriteLine("{");
+            rw.WriteLine("    display: true,");
+            rw.WriteLine("    labelString: \"Result File / Execution Time\"");
+            rw.WriteLine("}");
             rw.WriteLine("	}]");
             rw.WriteLine("},");
             rw.WriteLine("responsive: true,");
@@ -430,7 +426,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("	display: true,");
             rw.WriteLine("	text: \"{0}\"", distinctSampleGroupName);
             rw.WriteLine("}");
-            rw.WriteLine("		}");
+            rw.WriteLine("}");
             rw.WriteLine("	});");
             rw.WriteLine("	");
         }
@@ -442,10 +438,10 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("	var t = document.getElementById(\"toggleconfig\");");
             rw.WriteLine("	var img = t.childNodes[0];");
             rw.WriteLine("	if (x.style.display === \"\" || x.style.display === \"none\") {");
-            rw.WriteLine("		x.style.display = \"block\";");
+            rw.WriteLine("x.style.display = \"block\";");
             rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= (img.outerHTML || \"\") + \"Hide Test Configuration\";");
             rw.WriteLine("	} else {");
-            rw.WriteLine("		x.style.display = \"none\";");
+            rw.WriteLine("x.style.display = \"none\";");
             rw.WriteLine("	var img = t.childNodes[0];");
             rw.WriteLine("	document.getElementById(\"toggleconfig\").innerHTML= (img.outerHTML || \"\") + \"Show Test Configuration\";");
             rw.WriteLine("	}");
@@ -459,10 +455,10 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("              for(var i = 0; i < x.length; i++)");
             rw.WriteLine("              {"); 
             rw.WriteLine("	    if (x[i].style.display === \"none\") {");
-            rw.WriteLine("		    x[i].getAttribute('style');");
-            rw.WriteLine("		    x[i].removeAttribute('style');");
+            rw.WriteLine("    x[i].getAttribute('style');");
+            rw.WriteLine("    x[i].removeAttribute('style');");
             rw.WriteLine("	    } else {");
-            rw.WriteLine("		    x[i].style.display = \"none\";");
+            rw.WriteLine("    x[i].style.display = \"none\";");
             rw.WriteLine("	    }");
             rw.WriteLine("	}");
             rw.WriteLine("}");
@@ -476,11 +472,11 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("<script src=\"Chart.bundle.js\"></script>");
             rw.WriteLine("<link rel=\"stylesheet\" href=\"styles.css\">");
             rw.WriteLine("<style>");
-            rw.WriteLine("		canvas {");
+            rw.WriteLine("canvas {");
             rw.WriteLine("-moz-user-select: none;");
             rw.WriteLine("-webkit-user-select: none;");
             rw.WriteLine("-ms-user-select: none;");
-            rw.WriteLine("		}");
+            rw.WriteLine("}");
             rw.WriteLine("</style>");
             WriteJavaScript(rw);
             rw.WriteLine("</head>");
@@ -508,9 +504,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             var resultsForThisTest = GetResultsForThisTest(distinctTestName);
             var noTestRegressions = IsNoTestFailures(resultsForThisTest);
-            //rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td></td></tr>" : "<tr><td></td></tr>");
             rw.WriteLine("<tr {0}>", noTestRegressions ? "class=\"nofailures\"" : string.Empty);
-            rw.WriteLine("<td class=\"testnamecell\"><div class=\"testname {0}\"><h5><p>Test Name:</p></h5><h3><p>{1}</p></h3></div></td></tr>", 
+            rw.WriteLine("<td class=\"testnamecell\"><div class=\"testname {0}\"><p><h5>Test Name:</h5></p><p><h3>{1}</h3></p></div></td></tr>", 
                 noTestRegressions ? "nofailures" : string.Empty, 
                 distinctTestName);
             rw.WriteLine(noTestRegressions ? "<tr class=\"nofailures\"><td></td></tr>" : "<tr><td></td></tr>");
@@ -564,7 +559,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             // Write remaining values
             foreach (var performanceTestRunResult in perfTestRunResults)
             {
-                runsString.Append(string.Format("'{0}', ", performanceTestRunResult.ResultName));
+                runsString.Append(string.Format("['{0}','{1}'], ", performanceTestRunResult.ResultName, performanceTestRunResult.StartTime));
             }
 
             // Remove trailing comma and space
@@ -672,197 +667,73 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private void WriteTestConfigTable(StreamWriter rw)
         {
-            var firstResult = perfTestRunResults.First();
-
-            rw.WriteLine("<div ng-hide=\"isCollapsed\" select-on-click><div id=\"testconfig\" class=\"testconfig\">");
-
-            if (firstResult.PlayerSystemInfo != null)
-            {
-                WriteClassNameWithFields<PlayerSystemInfo>(rw, firstResult.PlayerSystemInfo, metadataValidator.PlayerSystemInfoResultFiles, metadataValidator.MismatchedPlayerSystemInfoValues);
-            }
-
-            if (firstResult.PlayerSettings != null)
-            {
-                WriteClassNameWithFields<PlayerSettings>(rw, firstResult.PlayerSettings, metadataValidator.PlayerSettingsResultFiles, metadataValidator.MismatchedPlayerSettingsValues);
-            }
-
-            if (firstResult.QualitySettings != null)
-            {
-                WriteClassNameWithFields<QualitySettings>(rw, firstResult.QualitySettings, metadataValidator.QualitySettingsResultFiles, metadataValidator.MismatchedQualitySettingsValues);
-            }
-
-            if (firstResult.ScreenSettings != null)
-            {
-                WriteClassNameWithFields<ScreenSettings>(rw, firstResult.ScreenSettings, metadataValidator.ScreenSettingsResultFiles, metadataValidator.MismatchedScreenSettingsValues);
-            }
-
-            if (firstResult.BuildSettings != null)
-            {
-                WriteClassNameWithFields<BuildSettings>(rw, firstResult.BuildSettings, metadataValidator.BuildSettingsResultFiles, metadataValidator.MismatchedBuildSettingsValues);
-            }
-
-            if (firstResult.EditorVersion != null)
-            {
-                WriteClassNameWithFields<EditorVersion>(rw, firstResult.EditorVersion, metadataValidator.EditorVersionResultFiles, metadataValidator.MismatchedEditorVersionValues);
-            }
-
+            //rw.WriteLine("<div ng-hide=\"isCollapsed\" select-on-click><div id=\"testconfig\" class=\"testconfig\">");
+            rw.WriteLine("<div id=\"testconfig\" class=\"testconfig\">");
+            WriteClassNameWithFields(rw);
             rw.WriteLine("</div></div>");
+            //rw.WriteLine("</div>");
         }
 
-        private void WriteClassNameWithFields<T>(StreamWriter rw, object instance, string[] resultFiles,
-            Dictionary<string, Dictionary<string, string>> mismatchedValues)
+        private void WriteClassNameWithFields(StreamWriter rw)
         {
-            var thisObject = (T) instance;
-            var excludedFieldNames = excludedConfigFieldNames.ContainsKey(typeof(T).Name)
-                ? excludedConfigFieldNames[typeof(T).Name]
-                : null;
-
-            var fieldNames = thisObject.GetType().GetFields().Select(f => f.Name);
-
-
-            if (excludedFieldNames == null || !excludedFieldNames.Any() || excludedFieldNames.Any() &&
-                fieldNames.Any(k1 => excludedFieldNames.All(k2 => k2 != k1)))
+            var typeMetadatas = testRunMetadataProcessor.TypeMetadata;
+            foreach (var typeMetadata in typeMetadatas)
             {
+                
                 rw.WriteLine("<div><hr></div><div class=\"{0}\">{1}</div><div><hr></div>",
-                    TypeHasValidMismatches(mismatchedValues, thisObject, excludedFieldNames)
+                    typeMetadata.HasMismatches
                         ? "typenamewarning"
-                        : "typename", thisObject.GetType().Name);
-
+                        : "typename", typeMetadata.TypeName);
+            
                 rw.WriteLine("<div class=\"systeminfo\"><pre>");
 
                 var sb = new StringBuilder();
 
-                if (thisObject.GetType().GetFields().Any(f => f.Name.Equals("VrSupported")))
+                if (typeMetadata.FieldGroups.Any())
                 {
-                     vrSupported = (bool)thisObject.GetType().GetFields().First(f => f.Name.Equals("VrSupported")).GetValue(thisObject);
-                }
-
-                
-
-                foreach (var field in thisObject.GetType().GetFields())
-                {
-                    if (excludedFieldNames != null && excludedFieldNames.Contains(field.Name))
+                    foreach (var fieldGroup in typeMetadata.FieldGroups)
                     {
-                        continue;
-                    }
-
-                    if (mismatchedValues.Count > 0 && mismatchedValues.ContainsKey(field.Name))
-                    {
-                        sb.Append("<div class=\"fieldgroupwarning\">");
-                        sb.Append(string.Format("<div class=\"fieldnamewarning\">{0}</div>", field.Name));
-                        sb.Append("<div class=\"fieldvaluewarning\">");
-                        sb.Append("<table class=\"warningtable\">");
-                        sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
-
-                        var mismatchedValue = mismatchedValues[field.Name];
-
-                        var baselineValue = string.Empty;
-                        for (var i = 0; i < resultFiles.Length; i++)
+                        if (fieldGroup.HasMismatches)
                         {
-                            if (i == 0)
+                            sb.Append("<div class=\"fieldgroupwarning\">");
+                            sb.Append(string.Format("<div class=\"fieldnamewarning\">{0}</div>", fieldGroup.FieldName));
+                            sb.Append("<div class=\"fieldvaluewarning\">");
+                            sb.Append("<table class=\"warningtable\">");
+                            sb.Append("<tr><th>Value</th><th>Result File</th><th>Path</th></tr>");
+
+                            for (var i = 0; i < fieldGroup.Values.Length; i++)
                             {
-                                baselineValue = mismatchedValue.First(kv => kv.Key.Equals(resultFiles[0])).Value;
+                                sb.Append(string.Format(
+                                    "<tr><td {0} title={4}>{1}</td><td {0}>{2}</td><td {0}>{3}</td></tr>",
+                                    i == 0 || !fieldGroup.Values[i].IsMismatched? "class=\"targetvalue\"" : string.Empty, fieldGroup.Values[i].Value,
+                                    fieldGroup.Values[i].ResultFileName, fieldGroup.Values[i].ResultFileDirectory,
+                                    i == 0 ? "\"Configuration used for comparison\"" :
+                                    !fieldGroup.Values[i].IsMismatched ? "\"Matching configuration\"" :
+                                    "\"Mismatched configuration\""));
                             }
 
-
-                            var resultFile = resultFiles[i];
-                            var value = mismatchedValue.Any(kv => kv.Key.Equals(resultFile))
-                                ? mismatchedValue.First(kv => kv.Key.Equals(resultFile)).Value
-                                : baselineValue;
-
-                            var pathParts = resultFile.Split(pathSeperator);
-                            var path = string.Join(pathSeperator, pathParts.Take(pathParts.Length - 1));
-
-
-                            sb.Append(string.Format(
-                                "<tr><td {0} title={4}>{1}</td><td {0}>{2}</td><td {0}>{3}</td></tr>",
-                                value.Equals(baselineValue) ? "class=\"targetvalue\"" : string.Empty, value,
-                                pathParts[pathParts.Length - 1], path,
-                                i == 0 ? "\"Configuration used for comparison\"" :
-                                value.Equals(baselineValue) ? "\"Matching configuration\"" :
-                                "\"Mismatched configuration\""));
+                            sb.Append("</table>");
+                            sb.Append("</div></div>");
                         }
-
-                        sb.Append("</table></div>");
+                        else
+                        {
+                            sb.Append("<div class=\"fieldgroup\">");
+                            sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", fieldGroup.FieldName));
+                            sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>",
+                                fieldGroup.Values.First().Value));
+                            sb.Append("</div>");
+                        }
                     }
-                    else
-                    {
-                        sb.Append("<div class=\"fieldgroup\">");
-                        sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", field.Name));
-                        sb.Append(string.Format("<div class=\"fieldvalue\">{0}</div>",
-                            GetFieldValues(field, thisObject)));
-                    }
-
                     sb.Append("</div>");
+                }
+                else
+                {
+                    sb.Append(string.Format("<div class=\"fieldname\">{0}</div>", noMetadataString));
                 }
 
                 rw.WriteLine(sb.ToString());
-                rw.WriteLine("</pre></div>");
+                rw.WriteLine("</pre>");
             }
-        }
-
-        private static bool TypeHasValidMismatches<T>(Dictionary<string, Dictionary<string, string>> mismatchedValues, T thisObject, string[] excludedFields = null)
-        {
-            bool hasValidMismatches = false;
-
-            IEnumerable<string> validMismatches = new List<string>();
-
-            if (excludedFields != null)
-            {
-                validMismatches = mismatchedValues.Keys.Where(k1 => excludedFields.All(k2 => k2 != k1));
-            }
-
-            if (validMismatches.Any())
-            {
-                var names = thisObject.GetType().GetFields().Select(f => f.Name);
-                var hasMatches = names.Intersect(mismatchedValues.Keys).Any();
-                hasValidMismatches = mismatchedValues.Count > 0 && hasMatches;
-            }
-
-            return hasValidMismatches;
-        }
-
-        private object GetFieldValues<T>(FieldInfo field, T thisObject)
-        {
-            return IsIEnumerableFieldType(field) ? ConvertIEnumberableToString(field, thisObject) : GetValue(field, thisObject);
-        }
-
-        private object GetValue<T>(FieldInfo field, T thisObject)
-        {
-            return 
-                 (field.Name.Equals("StereoRenderingPath") || field.Name.Equals("XrModel") || field.Name.Equals("XrDevice")) && !vrSupported ? 
-                    "None" : 
-                    field.GetValue(thisObject);
-        }
-
-        private bool IsIEnumerableFieldType(FieldInfo field)
-        {
-            return typeof(IEnumerable).IsAssignableFrom(field.FieldType) && field.FieldType != typeof(string);
-        }
-
-        private string ConvertIEnumberableToString<T>(FieldInfo field, T thisObject)
-        {
-            var sb = new StringBuilder();
-            var fieldValues = ((IEnumerable) field.GetValue(thisObject)) as List<string>;
-            if (fieldValues != null && fieldValues.Any())
-            {
-                foreach (var enumerable in fieldValues)
-                {
-                    sb.Append(enumerable + ",");
-                }
-
-                if (sb.ToString().EndsWith(','))
-                {
-                    // trim trailing comma
-                    sb.Length--;
-                }
-            }
-            else
-            {
-                sb.Append("None");
-            }
-
-            return sb.ToString();
         }
 
         private List<TestResult> GetResultsForThisTest(string distinctTestName)
@@ -931,14 +802,22 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private void EnsureOrderedResults(List<PerformanceTestRunResult> results)
         {
             baselineResults = results.FirstOrDefault(r => r.IsBaseline);
+
+            // If we have a baseline, add it the front of the array
             if (baselineResults != null)
             {
-                perfTestRunResults.Add(baselineResults);
+                Array.Resize(ref perfTestRunResults, perfTestRunResults.Length + 1);
+                perfTestRunResults[0] = baselineResults;
             }
 
+            // Sort remaining results by starttime ascending
             var tempResults = results.Where(r => !r.IsBaseline).ToList();
             tempResults.Sort((x, y) => DateTime.Compare(x.StartTime, y.StartTime));
-            perfTestRunResults.AddRange(tempResults);
+
+            // Copy the sorted results to the array
+            var lengthBeforeResize = perfTestRunResults.Length;
+            Array.Resize(ref perfTestRunResults, perfTestRunResults.Length + tempResults.Count);
+            tempResults.ToArray().CopyTo(perfTestRunResults, lengthBeforeResize);
         }
 
         private bool SampleGroupHasSamples(IEnumerable<TestResult> resultsForThisTest, string distinctSampleGroupName)

@@ -16,21 +16,21 @@ namespace UnityPerformanceBenchmarkReporter
         public uint SigFig { get; private set; }
         public string ReportDirPath { get; private set; }
 
-        public readonly MetadataValidator MetadataValidator = new MetadataValidator();
+        public readonly TestRunMetadataProcessor TestRunMetadataProcessor;
 
         private bool firstResult = true;
         private string firstTestRunResultPath;
         private PerformanceTestRun firstTestRun = new PerformanceTestRun();
         private readonly PerformanceTestRunProcessor performanceTestRunProcessor = new PerformanceTestRunProcessor();
         private readonly string xmlFileExtension = ".xml";
-        private readonly Dictionary<string, string[]> excludedConfigFieldNames = new Dictionary<string, string[]>();
+        private readonly Dictionary<Type, string[]> excludedConfigFieldNames = new Dictionary<Type, string[]>();
 
 
         public bool BaselineResultFilesExist => BaselineXmlFilePaths.Any() || BaselineXmlDirectoryPaths.Any();
 
         public bool ResultFilesExist => ResultXmlFilePaths.Any() || ResultXmlDirectoryPaths.Any();
 
-        public PerformanceBenchmark(Dictionary<string, string[]> configFieldNames = null)
+        public PerformanceBenchmark(Dictionary<Type, string[]> configFieldNames = null)
         {
             // Default significant figures to use for non-integer metrics if user doesn't specify another value.
             // Most values are in milliseconds or a count of something, so using more often creates an artificial baseline
@@ -42,6 +42,8 @@ namespace UnityPerformanceBenchmarkReporter
             {
                 excludedConfigFieldNames = configFieldNames;
             }
+
+            TestRunMetadataProcessor = new TestRunMetadataProcessor(configFieldNames);
         }
 
         public void AddPerformanceTestRunResults(
@@ -63,7 +65,7 @@ namespace UnityPerformanceBenchmarkReporter
 
         private void AddTestResults(
             TestResultXmlParser testResultXmlParser,  
-            List<PerformanceTestRunResult> runResults, 
+            List<PerformanceTestRunResult> testRunResults, 
             List<TestResult> testResults, 
             List<TestResult> baselineTestResults,
             HashSet<string> xmlDirectoryPaths, 
@@ -111,13 +113,15 @@ namespace UnityPerformanceBenchmarkReporter
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.WriteLine("No performance test data found to report in: {0}", resultFilesOrderByStartTime[i].Key);
                             Console.ResetColor();
+                            continue;
                         }
                         testResults.AddRange(results);
 
                         performanceTestRunProcessor.UpdateTestResultsBasedOnBaselineResults(baselineTestResults, testResults, SigFig);
 
-                        ValidateMetadata(performanceTestRun, resultFilesOrderByStartTime[i].Key);
-                        runResults.Add(performanceTestRunProcessor.CreateTestRunResult
+                        TestRunMetadataProcessor.ProcessMetadata(performanceTestRun, resultFilesOrderByStartTime[i].Key);
+                       
+                        testRunResults.Add(performanceTestRunProcessor.CreateTestRunResult
                             (
                                 performanceTestRun,
                                 results,
@@ -135,30 +139,35 @@ namespace UnityPerformanceBenchmarkReporter
             var xmlFileNames = dir.GetFiles("*" + xmlFileExtension, SearchOption.AllDirectories).Select(f => f.FullName);
             return xmlFileNames;
         }
+        
+        //private void ProcessMetadata(PerformanceTestRun performanceTestRun, string xmlFileNamePath)
+        //{
+        //    //TODO add check using TestRunMetadataExists()
+        //    //if()
+        //    TestRunMetadataProcessor.SetIsVrSupported(new[] { performanceTestRun });
+        //    TestRunMetadataProcessor.SetIsAndroid(new[] { performanceTestRun });
 
-        private void ValidateMetadata(PerformanceTestRun performanceTestRun, string xmlFileNamePath)
-        {
-            if (firstResult)
-            {
-                firstTestRunResultPath = xmlFileNamePath;
-                firstTestRun = performanceTestRun;
-                firstResult = false;
-            }
-            else
-            {
-                MetadataValidator.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<PlayerSystemInfo>());
-                MetadataValidator.ValidatePlayerSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<PlayerSettings>());
-                MetadataValidator.ValidateQualitySettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<QualitySettings>());
-                MetadataValidator.ValidateScreenSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<ScreenSettings>());
-                MetadataValidator.ValidateBuildSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<BuildSettings>());
-                MetadataValidator.ValidateEditorVersion(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<EditorVersion>());
-            }
-        }
+        //    if (firstResult)
+        //    {
+        //        firstTestRunResultPath = xmlFileNamePath;
+        //        firstTestRun = performanceTestRun;
+        //        firstResult = false;
+        //    }
+        //    else
+        //    {
+        //        TestRunMetadataProcessor.ValidatePlayerSystemInfo(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<PlayerSystemInfo>());
+        //        TestRunMetadataProcessor.ValidatePlayerSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<PlayerSettings>());
+        //        TestRunMetadataProcessor.ValidateQualitySettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<QualitySettings>());
+        //        TestRunMetadataProcessor.ValidateScreenSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<ScreenSettings>());
+        //        TestRunMetadataProcessor.ValidateBuildSettings(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<BuildSettings>());
+        //        TestRunMetadataProcessor.ValidateEditorVersion(firstTestRun, performanceTestRun, firstTestRunResultPath, xmlFileNamePath, ExcludedFieldNames<EditorVersion>());
+        //    }
+        //}
 
         private string[] ExcludedFieldNames<T>()
         {
-            return excludedConfigFieldNames.ContainsKey(typeof(T).Name)
-                ? excludedConfigFieldNames[typeof(T).Name]
+            return excludedConfigFieldNames.ContainsKey(typeof(T))
+                ? excludedConfigFieldNames[typeof(T)]
                 : null;
         }
 

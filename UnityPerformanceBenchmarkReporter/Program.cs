@@ -8,10 +8,20 @@ namespace UnityPerformanceBenchmarkReporter
 {
     internal class Program
     {
-        private static readonly Dictionary<string, string[]> ExcludedConfigFieldNames = new Dictionary<string, string[]>
+        private static readonly Dictionary<Type, string[]> ExcludedConfigFieldNames = new Dictionary<Type, string[]>
         {
-            {typeof(EditorVersion).Name, new []{"DateSeconds", "RevisionValue", "Branch"}},
-            {typeof(PlayerSettings).Name, new []{"MtRendering", "GraphicsJobs"}}
+            {typeof(EditorVersion), new []
+            {
+                "DateSeconds", 
+                "RevisionValue", 
+                "Branch"
+            }},
+            {typeof(PlayerSettings), new []
+            {
+                "MtRendering", // Hidden because we have a calculated field, RenderThreadingMode, that provides a more succinct value (SingleThreaded, MultiThreaded, GfxJobs)
+                "GraphicsJobs", // Hidden because we have a calculated field, RenderThreadingMode, that provides a more succinct value (SingleThreaded, MultiThreaded, GfxJobs)
+                "VrSupported" // Hidden because this value doesn't seem to be coming through as 'True' when it should be true.
+            }}
         };
 
         private static void Main(string[] args)
@@ -55,10 +65,9 @@ namespace UnityPerformanceBenchmarkReporter
                 }
             }
 
-            var reportWriter = new ReportWriter(ExcludedConfigFieldNames);
+            var reportWriter = new ReportWriter(performanceBenchmark.TestRunMetadataProcessor);
             reportWriter.WriteReport(
                 aggregateTestRunResults, 
-                performanceBenchmark.MetadataValidator, 
                 performanceBenchmark.SigFig, 
                 performanceBenchmark.ReportDirPath, 
                 performanceBenchmark.BaselineResultFilesExist);
