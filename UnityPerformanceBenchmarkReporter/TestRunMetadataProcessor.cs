@@ -113,6 +113,7 @@ namespace UnityPerformanceBenchmarkReporter
 
         private bool isVrSupported;
         private bool isAndroid;
+        private readonly string metadataNotAvailable = "Metadata not available";
 
         /// <summary>
         ///     Assumes first performanceTestRun should be used to compare all other performanceTestRuns against.
@@ -209,7 +210,7 @@ namespace UnityPerformanceBenchmarkReporter
                 while (fieldGroup.Values.Length < typeMetadata.ValidResultCount + typeMetadata.NullResultCount)
                 {
                     Array.Resize(ref fieldGroup.Values, fieldGroup.Values.Length + 1);
-                    fieldGroup.Values[fieldGroup.Values.Length - 1] = new FieldValue(xmlFileNamePath, "Metadata not available");
+                    fieldGroup.Values[fieldGroup.Values.Length - 1] = new FieldValue(xmlFileNamePath, metadataNotAvailable);
 
                     // fieldGroup.Values is sorted by ascending execution start time; the first element in this array
                     // is considered to be the reference point, regardless if it's a "baseline" or not.
@@ -296,10 +297,17 @@ namespace UnityPerformanceBenchmarkReporter
             if (IsIEnumerableFieldType(field))
                 return ConvertIEnumberableToString(field, (T) obj);
             var value = field.GetValue((T) obj);
-            if (value.GetType() != typeof(string))
+            if (value == null)
             {
-                value = Convert.ToString(value);
+                value = metadataNotAvailable;
             }
+            else
+            {
+                if (value.GetType() != typeof(string))
+                {
+                    value = Convert.ToString(value);
+                }
+            }                
 
             return (string) value;
         }
@@ -373,7 +381,7 @@ namespace UnityPerformanceBenchmarkReporter
             foreach (var performanceTestRun in performanceTestRuns)
             {
                 isVrSupported = isVrSupported || performanceTestRun.PlayerSettings != null &&
-                                performanceTestRun.PlayerSettings.EnabledXrTargets.Any();
+                                performanceTestRun.PlayerSettings.EnabledXrTargets != null && performanceTestRun.PlayerSettings.EnabledXrTargets.Any();
             }
         }
 
