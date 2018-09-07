@@ -65,12 +65,12 @@ namespace UnityPerformanceBenchmarkReporter
                 .Add("results|testresultsxmlsource=", "REQUIRED - Path to a test result XML filename OR directory. Directories are searched resursively. You can repeat this option with multiple result file or directory paths.",
                     xmlsource =>
                     {
-                        performanceBenchmark.AddXmlSourcePath(xmlsource, "testresultsxmlsource", ResultType.Test);
+                        performanceBenchmark.AddXmlSourcePath(xmlsource, "results", ResultType.Test);
                     })
                 .Add("baseline|baselinexmlsource:", "OPTIONAL - Path to a baseline XML filename.",
                         xmlsource =>
                         {
-                            performanceBenchmark.AddXmlSourcePath(xmlsource, "baselinexmlsource", ResultType.Baseline);
+                            performanceBenchmark.AddXmlSourcePath(xmlsource, "baseline", ResultType.Baseline);
                         })
                 .Add("report|reportdirpath:", "OPTIONAL - Path to where the report will be written. Default is current working directory.",
                     performanceBenchmark.AddReportDirPath);
