@@ -8,10 +8,20 @@ namespace UnityPerformanceBenchmarkReporter
 {
     internal class Program
     {
-        private static readonly Dictionary<string, string[]> ExcludedConfigFieldNames = new Dictionary<string, string[]>
+        private static readonly Dictionary<Type, string[]> ExcludedConfigFieldNames = new Dictionary<Type, string[]>
         {
-            {typeof(EditorVersion).Name, new []{"DateSeconds", "RevisionValue", "Branch"}},
-            {typeof(PlayerSettings).Name, new []{"MtRendering", "GraphicsJobs"}}
+            {typeof(EditorVersion), new []
+            {
+                "DateSeconds", 
+                "RevisionValue", 
+                "Branch"
+            }},
+            {typeof(PlayerSettings), new []
+            {
+                "MtRendering", // Hidden because we have a calculated field, RenderThreadingMode, that provides a more succinct value (SingleThreaded, MultiThreaded, GfxJobs)
+                "GraphicsJobs", // Hidden because we have a calculated field, RenderThreadingMode, that provides a more succinct value (SingleThreaded, MultiThreaded, GfxJobs)
+                "VrSupported" // Hidden because this value doesn't seem to be coming through as 'True' when it should be true.
+            }}
         };
 
         private static void Main(string[] args)
@@ -55,10 +65,29 @@ namespace UnityPerformanceBenchmarkReporter
                 }
             }
 
-            var reportWriter = new ReportWriter(ExcludedConfigFieldNames);
+            var performanceTestResults = new PerformanceTestRunResult[0]; 
+
+            if (aggregateTestRunResults.Any(a => a.IsBaseline))
+            {
+                Array.Resize(ref performanceTestResults, 1);
+                performanceTestResults[0] = aggregateTestRunResults.First(a => a.IsBaseline);
+            }
+
+            var nonBaselineTestRunResults = aggregateTestRunResults.Where(a => !a.IsBaseline).ToList();
+
+            nonBaselineTestRunResults.Sort((run1, run2) => string.Compare(run1.ResultName, run2.ResultName, StringComparison.Ordinal));
+
+
+            foreach (var performanceTestRunResult in nonBaselineTestRunResults)
+            {
+                Array.Resize(ref performanceTestResults, performanceTestResults.Length + 1);
+                performanceTestResults[performanceTestResults.Length - 1] = performanceTestRunResult;
+            }
+
+
+            var reportWriter = new ReportWriter(performanceBenchmark.TestRunMetadataProcessor);
             reportWriter.WriteReport(
-                aggregateTestRunResults, 
-                performanceBenchmark.MetadataValidator, 
+                performanceTestResults, 
                 performanceBenchmark.SigFig, 
                 performanceBenchmark.ReportDirPath, 
                 performanceBenchmark.BaselineResultFilesExist);

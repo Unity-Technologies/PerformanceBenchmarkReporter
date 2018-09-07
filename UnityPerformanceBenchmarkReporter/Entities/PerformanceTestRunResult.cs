@@ -17,5 +17,15 @@ namespace UnityPerformanceBenchmarkReporter.Entities
         public List<TestResult> TestResults  = new List<TestResult>();
         public bool IsBaseline;
         public string ResultName;
+
+        public bool TestRunMetadataExists()
+        {
+            return PlayerSystemInfo != null
+                   || PlayerSettings != null
+                   || QualitySettings != null
+                   || ScreenSettings != null
+                   || BuildSettings != null
+                   || EditorVersion != null;
+        }
     }
 }

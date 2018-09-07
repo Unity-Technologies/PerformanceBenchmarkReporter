@@ -18,7 +18,7 @@ namespace UnityPerformanceBenchmarkReporter
             return performanceTestRun;
         }
 
-        public void ValidateInput(string resultXmlFileName)
+        private void ValidateInput(string resultXmlFileName)
         {
             if (string.IsNullOrEmpty(resultXmlFileName))
             {
@@ -45,7 +45,7 @@ namespace UnityPerformanceBenchmarkReporter
             }
         }
 
-        public PerformanceTestRun TryParseXmlToPerformanceTestRun(XDocument xmlDocument)
+        private PerformanceTestRun TryParseXmlToPerformanceTestRun(XDocument xmlDocument)
         {
             var output = xmlDocument.Descendants("output").ToArray();
             if (output == null || !output.Any())
@@ -85,29 +85,48 @@ namespace UnityPerformanceBenchmarkReporter
         {
             foreach (var element in output)
             {
-                foreach (var line in element.Value.Split('\n'))
+                var elements = element.Value.Split('\n');
+                if(elements.Any(e => e.Length > 0 && e.Substring(0, 2).Equals("##")))
                 {
-                    var json = GetJsonFromHashtag("performancetestruninfo", line);
-                    if (json == null)
-                    {
-                        continue;
-                    }
+                    var line = elements.First(e => e.Length > 0 && e.Substring(0, 2).Equals("##"));
 
-                    var result = TryDeserializePerformanceTestRunJsonObject(json);
-                    if (result != null)
+                    var json = GetJsonFromHashtag("performancetestruninfo", line);
+
+                    // This is the happy case where we have a performancetestruninfo json object
+                    if (json != null)
                     {
-                        run.TestSuite = result.TestSuite;
-                        run.EditorVersion = result.EditorVersion;
-                        run.QualitySettings = result.QualitySettings;
-                        run.ScreenSettings = result.ScreenSettings;
-                        run.BuildSettings = result.BuildSettings;
-                        run.PlayerSettings = result.PlayerSettings;
-                        run.PlayerSystemInfo = result.PlayerSystemInfo;
-                        run.StartTime = result.StartTime;
-                        // @TODO fix end time, does it matter for now?
-                        run.EndTime = run.StartTime;
+                        var result = TryDeserializePerformanceTestRunJsonObject(json);
+                        if (result != null)
+                        {
+                            run.TestSuite = result.TestSuite;
+                            run.EditorVersion = result.EditorVersion;
+                            run.QualitySettings = result.QualitySettings;
+                            run.ScreenSettings = result.ScreenSettings;
+                            run.BuildSettings = result.BuildSettings;
+                            run.PlayerSettings = result.PlayerSettings;
+                            run.PlayerSystemInfo = result.PlayerSystemInfo;
+                            run.StartTime = result.StartTime;
+                            // @TODO fix end time, does it matter for now?
+                            run.EndTime = run.StartTime;
+                        }
                     }
-                }
+                    // Unhappy case where we couldn't find a performancetestruninfo object
+                    // This could be because we have missing metadata for the test run
+                    // In this case, we try to look for a performancetestresult json object
+                    // We should have at least startime metadata  that we can use to correctly
+                    // display the test results on the x-axis of the chart
+                    else
+                    {
+                        json = GetJsonFromHashtag("performancetestresult", line);
+                        if (json != null)
+                        {
+                            var result = TryDeserializePerformanceTestRunJsonObject(json);
+                            run.StartTime = result.StartTime;
+                            // @TODO fix end time, does it matter for now?
+                            run.EndTime = run.StartTime;
+                        }
+                    }
+                } 
             }
         }
 
@@ -151,7 +170,7 @@ namespace UnityPerformanceBenchmarkReporter
             return performanceTestRun;
         }
 
-        public string GetJsonFromHashtag(string tag, string line)
+        private string GetJsonFromHashtag(string tag, string line)
         {
             if (!line.Contains($"##{tag}:")) return null;
             var jsonStart = line.IndexOf('{');
