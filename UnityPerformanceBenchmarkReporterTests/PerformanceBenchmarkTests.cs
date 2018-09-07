@@ -130,11 +130,11 @@ namespace UnityPerformanceBenchmarkReporterTests
         {
             // Arrange
             var resultXmlFilePath = EnsureFullPath("results.xml");
-            var baselineXmlDir = EnsureFullPath("Baselines");
+            var baselineXmlFilePath = EnsureFullPath("baseline.xml");
             var args = new[]
             {
                 string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
-                string.Format("--baselinexmlsource={0}", baselineXmlDir)
+                string.Format("--baselinexmlsource={0}", baselineXmlFilePath)
             };
             optionsParser.ParseOptions(PerformanceBenchmark, args);
 
@@ -143,35 +143,6 @@ namespace UnityPerformanceBenchmarkReporterTests
 
             // Assert
             Assert.IsTrue(PerformanceBenchmark.BaselineResultFilesExist);
-            AssertCorrectBaselineXmlDirectoryPaths(new[] { baselineXmlDir });
-            Assert.NotNull(baselineTestResults);
-            Assert.IsTrue(baselineTestResults.Count > 0);
-            Assert.NotNull(baselinePerformanceTestRunResults);
-            Assert.IsTrue(baselinePerformanceTestRunResults.Count > 0);
-        }
-
-        [Test]
-        public void Verify_AddMultipleBaselinePerformanceTestRunResultsDirectory()
-        {
-            // Arrange
-            var resultXmlFilePath = EnsureFullPath("results.xml");
-            var baselineXmlDir = EnsureFullPath("Baselines");
-            var baselineXmlDir2 = EnsureFullPath("Baselines2");
-            var args = new[]
-            {
-                string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
-                string.Format("--baselinexmlsource={0}", baselineXmlDir),
-                string.Format("--baselinexmlsource={0}", baselineXmlDir2)
-            };
-            optionsParser.ParseOptions(PerformanceBenchmark, args);
-
-            // Act
-            PerformanceBenchmark.AddBaselinePerformanceTestRunResults(testResultXmlParser, baselinePerformanceTestRunResults,
-                baselineTestResults);
-
-            // Assert
-            Assert.IsTrue(PerformanceBenchmark.BaselineResultFilesExist);
-            AssertCorrectBaselineXmlDirectoryPaths(new[] {baselineXmlDir, baselineXmlDir2});
             Assert.NotNull(baselineTestResults);
             Assert.IsTrue(baselineTestResults.Count > 0);
             Assert.NotNull(baselinePerformanceTestRunResults);
@@ -219,16 +190,7 @@ namespace UnityPerformanceBenchmarkReporterTests
                 Assert.IsTrue(PerformanceBenchmark.BaselineXmlFilePaths.Any(f => f.Equals(baselineXmlFilePath)));
             }
         }
-
-        private void AssertCorrectBaselineXmlDirectoryPaths(string[] baselineXmlDirPaths)
-        {
-            foreach (var baselineXmlDirPath in baselineXmlDirPaths)
-            {
-                Assert.IsFalse(PerformanceBenchmark.ResultXmlDirectoryPaths.Contains(baselineXmlDirPath));
-                Assert.IsTrue(PerformanceBenchmark.BaselineXmlDirectoryPaths.Contains(baselineXmlDirPath));
-            }
-        }
-
+        
         private void AssertCorrectResultXmlFilePaths(string[] resultFileNames)
         {
             foreach (var resultXmlFilePath in resultFileNames)
@@ -243,7 +205,6 @@ namespace UnityPerformanceBenchmarkReporterTests
             foreach (var resultXmlDirPath in resultsXmlDirPaths)
             {
                 Assert.IsTrue(PerformanceBenchmark.ResultXmlDirectoryPaths.Contains(resultXmlDirPath));
-                Assert.IsFalse(PerformanceBenchmark.BaselineXmlDirectoryPaths.Contains(resultXmlDirPath));
             }
         }
     }

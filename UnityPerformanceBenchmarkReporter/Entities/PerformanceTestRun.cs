@@ -73,6 +73,7 @@ namespace UnityPerformanceBenchmarkReporter.Entities
     public class PlayerSettings
     {
         public string ScriptingBackend;
+        public string ScriptingRuntimeVersion;
         public bool VrSupported;
         public bool MtRendering;
         public bool GraphicsJobs;
