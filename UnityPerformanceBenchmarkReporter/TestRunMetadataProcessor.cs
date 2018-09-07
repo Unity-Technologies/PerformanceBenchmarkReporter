@@ -64,7 +64,7 @@ namespace UnityPerformanceBenchmarkReporter
                 ResultFileDirectory = string.Join(pathSeperator, pathParts.Take(pathParts.Length - 1));
                 ResultFileName = pathParts[pathParts.Length - 1];
             }
-            
+
             Value = value;
         }
 
@@ -84,6 +84,7 @@ namespace UnityPerformanceBenchmarkReporter
         };
 
         private readonly Dictionary<Type, string[]> excludedConfigFieldNames;
+        private readonly string metadataNotAvailable = "Metadata not available";
 
         private readonly Type[] metadataTypes =
         {
@@ -105,15 +106,15 @@ namespace UnityPerformanceBenchmarkReporter
             "StereoRenderingPath"
         };
 
+        private bool isAndroid;
+
+        private bool isVrSupported;
+
 
         public TestRunMetadataProcessor(Dictionary<Type, string[]> excludedFieldNames)
         {
             excludedConfigFieldNames = excludedFieldNames;
         }
-
-        private bool isVrSupported;
-        private bool isAndroid;
-        private readonly string metadataNotAvailable = "Metadata not available";
 
         /// <summary>
         ///     Assumes first performanceTestRun should be used to compare all other performanceTestRuns against.
@@ -161,8 +162,10 @@ namespace UnityPerformanceBenchmarkReporter
                                 BackfillFieldGroupValuesForMissingMetadata(xmlFileNamePath, fieldGroup, typeMetadata);
                             }
                         }
+
                         continue;
                     }
+
                     var fields = obj.GetType().GetFields();
                     var fieldsToProcess = GetFieldsToProcess(metadataType, fields);
 
@@ -186,11 +189,13 @@ namespace UnityPerformanceBenchmarkReporter
                             var value = GetValueBasedOnType(metadataType, field, obj);
 
                             Array.Resize(ref thisFieldGroup.Values, thisFieldGroup.Values.Length + 1);
-                            thisFieldGroup.Values[thisFieldGroup.Values.Length - 1] = new FieldValue(xmlFileNamePath, value);
+                            thisFieldGroup.Values[thisFieldGroup.Values.Length - 1] =
+                                new FieldValue(xmlFileNamePath, value);
 
-                            // fieldGroup.Values is sorted by ascending execution start time; the first element in this array
+                            // fieldGroup.Values is sorted by result name; the first element in this array
                             // is considered to be the reference point, regardless if it's a "baseline" or not.
-                            if (thisFieldGroup.Values[thisFieldGroup.Values.Length - 1].Value != thisFieldGroup.Values[0].Value)
+                            if (thisFieldGroup.Values[thisFieldGroup.Values.Length - 1].Value !=
+                                thisFieldGroup.Values[0].Value)
                             {
                                 thisFieldGroup.Values[thisFieldGroup.Values.Length - 1].IsMismatched = true;
                             }
@@ -210,9 +215,10 @@ namespace UnityPerformanceBenchmarkReporter
                 while (fieldGroup.Values.Length < typeMetadata.ValidResultCount + typeMetadata.NullResultCount)
                 {
                     Array.Resize(ref fieldGroup.Values, fieldGroup.Values.Length + 1);
-                    fieldGroup.Values[fieldGroup.Values.Length - 1] = new FieldValue(xmlFileNamePath, metadataNotAvailable);
+                    fieldGroup.Values[fieldGroup.Values.Length - 1] =
+                        new FieldValue(xmlFileNamePath, metadataNotAvailable);
 
-                    // fieldGroup.Values is sorted by ascending execution start time; the first element in this array
+                    // fieldGroup.Values is sorted by result name; the first element in this array
                     // is considered to be the reference point, regardless if it's a "baseline" or not.
                     if (fieldGroup.Values[fieldGroup.Values.Length - 1].Value != fieldGroup.Values[0].Value)
                     {
@@ -307,15 +313,15 @@ namespace UnityPerformanceBenchmarkReporter
                 {
                     value = Convert.ToString(value);
                 }
-            }                
+            }
 
             return (string) value;
         }
 
         private FieldInfo[] GetFieldsToProcess(Type metadataType, FieldInfo[] fields)
         {
-// Derive a subset of fields to process from validFieldNames
-            var excludedFieldNames = excludedConfigFieldNames.ContainsKey(metadataType)
+            // Derive a subset of fields to process from validFieldNames
+            var excludedFieldNames = excludedConfigFieldNames !=  null && excludedConfigFieldNames.ContainsKey(metadataType)
                 ? excludedConfigFieldNames[metadataType]
                 : null;
             var validFieldNames = GetValidFieldNames(excludedFieldNames, fields.Select(f => f.Name).ToArray());
@@ -380,8 +386,7 @@ namespace UnityPerformanceBenchmarkReporter
         {
             foreach (var performanceTestRun in performanceTestRuns)
             {
-                isVrSupported = isVrSupported || performanceTestRun.PlayerSettings != null &&
-                                performanceTestRun.PlayerSettings.EnabledXrTargets != null && performanceTestRun.PlayerSettings.EnabledXrTargets.Any();
+                isVrSupported = isVrSupported || performanceTestRun.PlayerSettings?.EnabledXrTargets != null && performanceTestRun.PlayerSettings.EnabledXrTargets.Any();
             }
         }
 

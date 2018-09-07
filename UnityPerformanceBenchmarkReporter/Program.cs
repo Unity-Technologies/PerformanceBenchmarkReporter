@@ -65,9 +65,29 @@ namespace UnityPerformanceBenchmarkReporter
                 }
             }
 
+            var performanceTestResults = new PerformanceTestRunResult[0]; 
+
+            if (aggregateTestRunResults.Any(a => a.IsBaseline))
+            {
+                Array.Resize(ref performanceTestResults, 1);
+                performanceTestResults[0] = aggregateTestRunResults.First(a => a.IsBaseline);
+            }
+
+            var nonBaselineTestRunResults = aggregateTestRunResults.Where(a => !a.IsBaseline).ToList();
+
+            nonBaselineTestRunResults.Sort((run1, run2) => string.Compare(run1.ResultName, run2.ResultName, StringComparison.Ordinal));
+
+
+            foreach (var performanceTestRunResult in nonBaselineTestRunResults)
+            {
+                Array.Resize(ref performanceTestResults, performanceTestResults.Length + 1);
+                performanceTestResults[performanceTestResults.Length - 1] = performanceTestRunResult;
+            }
+
+
             var reportWriter = new ReportWriter(performanceBenchmark.TestRunMetadataProcessor);
             reportWriter.WriteReport(
-                aggregateTestRunResults, 
+                performanceTestResults, 
                 performanceBenchmark.SigFig, 
                 performanceBenchmark.ReportDirPath, 
                 performanceBenchmark.BaselineResultFilesExist);

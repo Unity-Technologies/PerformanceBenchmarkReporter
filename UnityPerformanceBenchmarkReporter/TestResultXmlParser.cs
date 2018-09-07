@@ -18,7 +18,7 @@ namespace UnityPerformanceBenchmarkReporter
             return performanceTestRun;
         }
 
-        public void ValidateInput(string resultXmlFileName)
+        private void ValidateInput(string resultXmlFileName)
         {
             if (string.IsNullOrEmpty(resultXmlFileName))
             {
@@ -45,7 +45,7 @@ namespace UnityPerformanceBenchmarkReporter
             }
         }
 
-        public PerformanceTestRun TryParseXmlToPerformanceTestRun(XDocument xmlDocument)
+        private PerformanceTestRun TryParseXmlToPerformanceTestRun(XDocument xmlDocument)
         {
             var output = xmlDocument.Descendants("output").ToArray();
             if (output == null || !output.Any())
@@ -86,9 +86,9 @@ namespace UnityPerformanceBenchmarkReporter
             foreach (var element in output)
             {
                 var elements = element.Value.Split('\n');
-                if(elements.Where(e => e.Length > 0 && e.Substring(0, 2).Equals("##")).Any())
+                if(elements.Any(e => e.Length > 0 && e.Substring(0, 2).Equals("##")))
                 {
-                    var line = elements.Where(e => e.Length > 0 && e.Substring(0, 2).Equals("##")).First();
+                    var line = elements.First(e => e.Length > 0 && e.Substring(0, 2).Equals("##"));
 
                     var json = GetJsonFromHashtag("performancetestruninfo", line);
 
@@ -124,10 +124,6 @@ namespace UnityPerformanceBenchmarkReporter
                             run.StartTime = result.StartTime;
                             // @TODO fix end time, does it matter for now?
                             run.EndTime = run.StartTime;
-                        }
-                        else
-                        {
-                            continue;
                         }
                     }
                 } 
@@ -174,7 +170,7 @@ namespace UnityPerformanceBenchmarkReporter
             return performanceTestRun;
         }
 
-        public string GetJsonFromHashtag(string tag, string line)
+        private string GetJsonFromHashtag(string tag, string line)
         {
             if (!line.Contains($"##{tag}:")) return null;
             var jsonStart = line.IndexOf('{');
