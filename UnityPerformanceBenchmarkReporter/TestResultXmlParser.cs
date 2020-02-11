@@ -2,71 +2,71 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Newtonsoft.Json;
 using UnityPerformanceBenchmarkReporter.Entities;
+using UnityPerformanceBenchmarkReporter.Entities.New;
 
 namespace UnityPerformanceBenchmarkReporter
 {
     public class TestResultXmlParser
     {
-        public PerformanceTestRun GetPerformanceTestRunFromXml(string resultXmlFileName)
+        public PerformanceTestRun Parse(string path)
         {
-            ValidateInput(resultXmlFileName);
-            var xmlDocument = TryLoadResultXmlFile(resultXmlFileName);
-            var performanceTestRun = TryParseXmlToPerformanceTestRun(xmlDocument);
-            return performanceTestRun;
+            var xmlDocument = XDocument.Load(path);
+            return Parse(xmlDocument);
         }
 
-        private void ValidateInput(string resultXmlFileName)
+        private static PerformanceTestRun Parse(XDocument xmlDocument)
         {
-            if (string.IsNullOrEmpty(resultXmlFileName))
+            var output = xmlDocument.Descendants("output");
+            var xElements = output as XElement[] ?? output.ToArray();
+
+            if (!xElements.Any())
             {
-                throw new ArgumentNullException(resultXmlFileName, nameof(resultXmlFileName));
+                return null;
             }
 
-            if (!File.Exists(resultXmlFileName))
-            {
-                throw new FileNotFoundException("Result file not found; {0}", resultXmlFileName);
-            }
-        }
+            var run = DeserializeMetadata(xElements) ?? DeserializeMetadataV2(xElements);
 
-        private XDocument TryLoadResultXmlFile(string resultXmlFileName)
-        {
-            try
+            if (run == null)
             {
-                return XDocument.Load(resultXmlFileName);
-            }
-            catch (Exception e)
-            {
-                var errMsg = string.Format("Failed to load xml result file: {0}", resultXmlFileName);
-                WriteExceptionConsoleErrorMessage(errMsg, e);
-                throw;
-            }
-        }
-
-        private PerformanceTestRun TryParseXmlToPerformanceTestRun(XDocument xmlDocument)
-        {
-            var output = xmlDocument.Descendants("output").ToArray();
-            if (output == null || !output.Any())
-            {
-                throw new Exception("The xmlDocument passed to the TryParseXmlToPerformanceTestRun method does not have any \'ouput\' xml tags needed for correct parsing.");
+                return null;
             }
 
-            var run = new PerformanceTestRun();
-            DeserializeTestResults(output, run);
-            DeserializeMetadata(output, run);
-            
+            run.EndTime = DateTime.Now.ToUniversalTime()
+                .Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+                .TotalMilliseconds;
+
+            DeserializeTestResults(xElements, run);
+            DeserializeTestResultsV2(xElements, run);
+
             return run;
         }
 
-        private void DeserializeTestResults(IEnumerable<XElement> output, PerformanceTestRun run)
+        private static void DeserializeTestResults(IEnumerable<XElement> output, PerformanceTestRun run)
         {
             foreach (var element in output)
             {
                 foreach (var line in element.Value.Split('\n'))
                 {
                     var json = GetJsonFromHashtag("performancetestresult", line);
+                    if (json == null) continue;
+
+                    var result = JsonConvert.DeserializeObject<PerformanceTestResult>(json);
+                    run.Results.Add(result);
+                }
+            }
+        }
+
+        private static void DeserializeTestResultsV2(IEnumerable<XElement> output, PerformanceTestRun run)
+        {
+            foreach (var element in output)
+            {
+                foreach (var line in element.Value.Split('\n'))
+                {
+                    var json = GetJsonFromHashtag("performancetestresult2", line);
                     if (json == null)
                     {
                         continue;
@@ -75,102 +75,161 @@ namespace UnityPerformanceBenchmarkReporter
                     var result = TryDeserializePerformanceTestResultJsonObject(json);
                     if (result != null)
                     {
-                        run.Results.Add(result);
-                    }                    
+                        var pt = new PerformanceTestResult()
+                        {
+                            TestCategories = result.Categories,
+                            TestName = result.Name,
+                            TestVersion = result.Version,
+                            SampleGroups = result.SampleGroups.Select(sg => new Entities.SampleGroup
+                            {
+                                Samples = sg.Samples,
+                                Average = sg.Average,
+                                Max = sg.Max,
+                                Median = sg.Median,
+                                Min = sg.Min,
+                                Sum = sg.Sum,
+                                StandardDeviation = sg.StandardDeviation,
+                                SampleCount = sg.Samples.Count,
+                                Definition = new SampleGroupDefinition()
+                                {
+                                    Name = sg.Name,
+                                    SampleUnit = (Entities.SampleUnit)sg.Unit,
+                                    IncreaseIsBetter = sg.IncreaseIsBetter
+                                }
+                            }).ToList()
+                        };
+                        run.Results.Add(pt);
+                    }
                 }
             }
         }
 
-        private void DeserializeMetadata(IEnumerable<XElement> output, PerformanceTestRun run)
+        private static PerformanceTestRun DeserializeMetadata(IEnumerable<XElement> output)
+        {
+            return (output
+                .SelectMany(element => element.Value.Split('\n'),
+                    (element, line) => GetJsonFromHashtag("performancetestruninfo", line))
+                .Where(json => json != null)
+                .Select(JsonConvert.DeserializeObject<PerformanceTestRun>)).FirstOrDefault();
+        }
+
+        private static PerformanceTestRun DeserializeMetadataV2(IEnumerable<XElement> output)
         {
             foreach (var element in output)
             {
-                var elements = element.Value.Split('\n');
-                if(elements.Any(e => e.Length > 0 && e.Substring(0, 2).Equals("##")))
+                var pattern = @"##performancetestruninfo2:(.+)\n";
+                var regex = new Regex(pattern);
+                var matches = regex.Match(element.Value);
+                if (!matches.Success) continue;
+                if (matches.Groups.Count == 0) continue;
+
+                if (matches.Groups[1].Captures.Count > 1)
                 {
-                    var line = elements.First(e => e.Length > 0 && e.Substring(0, 2).Equals("##"));
+                    throw new Exception("Performance test run had multiple hardware and player settings, there should only be one.");
+                }
 
-                    var json = GetJsonFromHashtag("performancetestruninfo", line);
+                var json = matches.Groups[1].Value;
+                if (string.IsNullOrEmpty(json))
+                {
+                    throw new Exception("Performance test run has incomplete hardware and player settings.");
+                }
 
-                    // This is the happy case where we have a performancetestruninfo json object
-                    if (json != null)
+                var result = TryDeserializePerformanceTestRunJsonObject(json);
+
+                var run = new PerformanceTestRun()
+                {
+                    BuildSettings = new BuildSettings()
                     {
-                        var result = TryDeserializePerformanceTestRunJsonObject(json);
-                        if (result != null)
-                        {
-                            run.TestSuite = result.TestSuite;
-                            run.EditorVersion = result.EditorVersion;
-                            run.QualitySettings = result.QualitySettings;
-                            run.ScreenSettings = result.ScreenSettings;
-                            run.BuildSettings = result.BuildSettings;
-                            run.PlayerSettings = result.PlayerSettings;
-                            run.PlayerSystemInfo = result.PlayerSystemInfo;
-                            run.StartTime = result.StartTime;
-                            // @TODO fix end time, does it matter for now?
-                            run.EndTime = run.StartTime;
-                        }
-                    }
-                    // Unhappy case where we couldn't find a performancetestruninfo object
-                    // This could be because we have missing metadata for the test run
-                    // In this case, we try to look for a performancetestresult json object
-                    // We should have at least startime metadata  that we can use to correctly
-                    // display the test results on the x-axis of the chart
-                    else
+                        Platform = result.Player.Platform,
+                        BuildTarget = result.Player.BuildTarget,
+                        DevelopmentPlayer = true,
+                        AndroidBuildSystem = result.Player.AndroidBuildSystem
+                    },
+                    EditorVersion = new EditorVersion()
                     {
-                        json = GetJsonFromHashtag("performancetestresult", line);
-                        if (json != null)
-                        {
-                            var result = TryDeserializePerformanceTestRunJsonObject(json);
-                            run.StartTime = result.StartTime;
-                            // @TODO fix end time, does it matter for now?
-                            run.EndTime = run.StartTime;
-                        }
-                    }
-                } 
+                        Branch = result.Editor.Branch,
+                        DateSeconds = result.Editor.Date,
+                        FullVersion = $"{result.Editor.Version} ({result.Editor.Changeset})",
+                        RevisionValue = 0
+                    },
+                    PlayerSettings = new PlayerSettings()
+                    {
+                        GpuSkinning = result.Player.GpuSkinning,
+                        GraphicsApi = result.Player.GraphicsApi,
+                        RenderThreadingMode = result.Player.RenderThreadingMode,
+                        ScriptingBackend = result.Player.ScriptingBackend,
+                        AndroidTargetSdkVersion = result.Player.AndroidTargetSdkVersion,
+                        EnabledXrTargets = new List<string>(),
+                        ScriptingRuntimeVersion = "",
+                        StereoRenderingPath = result.Player.StereoRenderingPath
+                    },
+                    QualitySettings = new QualitySettings()
+                    {
+                        Vsync = result.Player.Vsync,
+                        AntiAliasing = result.Player.AntiAliasing,
+                        AnisotropicFiltering = result.Player.AnisotropicFiltering,
+                        BlendWeights = result.Player.BlendWeights,
+                        ColorSpace = result.Player.ColorSpace
+                    },
+                    ScreenSettings = new ScreenSettings()
+                    {
+                        Fullscreen = result.Player.Fullscreen,
+                        ScreenHeight = result.Player.ScreenHeight,
+                        ScreenWidth = result.Player.ScreenWidth,
+                        ScreenRefreshRate = result.Player.ScreenRefreshRate
+                    },
+                    PlayerSystemInfo = new PlayerSystemInfo()
+                    {
+                        DeviceModel = result.Hardware.DeviceModel,
+                        DeviceName = result.Hardware.DeviceName,
+                        OperatingSystem = result.Hardware.OperatingSystem,
+                        ProcessorCount = result.Hardware.ProcessorCount,
+                        ProcessorType = result.Hardware.ProcessorType,
+                        GraphicsDeviceName = result.Hardware.GraphicsDeviceName,
+                        SystemMemorySize = result.Hardware.SystemMemorySizeMB,
+                        XrDevice = "",
+                        XrModel = ""
+                    },
+                    StartTime = result.Date,
+                    TestSuite = result.TestSuite,
+                    Results = new List<PerformanceTestResult>()
+                };
+
+                return run;
             }
+
+            return null;
         }
 
-        private PerformanceTestResult TryDeserializePerformanceTestResultJsonObject(string json)
+        private static Run TryDeserializePerformanceTestRunJsonObject(string json)
         {
-            PerformanceTestResult performanceTestResult;
             try
             {
-                performanceTestResult = JsonConvert.DeserializeObject<PerformanceTestResult>(json);
+                return JsonConvert.DeserializeObject<Run>(json);
             }
             catch (Exception e)
             {
-                var errMsg = string.Format("Exception thrown while deserializing json string to PerformanceTestResult: {0}", json);
-                WriteExceptionConsoleErrorMessage(errMsg, e);
-                throw;
+                Console.WriteLine(e.Message);
             }
 
-            return performanceTestResult;
+            return null;
         }
 
-        private void WriteExceptionConsoleErrorMessage(string errMsg, Exception e)
+        private static Entities.New.TestResult TryDeserializePerformanceTestResultJsonObject(string json)
         {
-            Console.Error.WriteLine("{0}\r\nException: {1}\r\nInnerException: {2}", errMsg, e.Message,
-                e.InnerException.Message);
-        }
-
-        private PerformanceTestRun TryDeserializePerformanceTestRunJsonObject(string json)
-        {
-            PerformanceTestRun performanceTestRun;
             try
             {
-                performanceTestRun = JsonConvert.DeserializeObject<PerformanceTestRun>(json);
+                return JsonConvert.DeserializeObject<Entities.New.TestResult>(json);
             }
             catch (Exception e)
             {
-                var errMsg = string.Format("Exception thrown while deserializing json string to PerformanceTestRun: {0}", json);
-                WriteExceptionConsoleErrorMessage(errMsg, e);
-                throw;
+                Console.WriteLine(e.Message);
             }
 
-            return performanceTestRun;
+            return null;
         }
 
-        private string GetJsonFromHashtag(string tag, string line)
+        private static string GetJsonFromHashtag(string tag, string line)
         {
             if (!line.Contains($"##{tag}:")) return null;
             var jsonStart = line.IndexOf('{');
@@ -179,18 +238,19 @@ namespace UnityPerformanceBenchmarkReporter
             while (openBrackets > 0 || stringIndex == jsonStart)
             {
                 var character = line[stringIndex];
-                switch (character)
+                if (character == '{')
                 {
-                    case '{':
-                        openBrackets++;
-                        break;
-                    case '}':
-                        openBrackets--;
-                        break;
+                    openBrackets++;
+                }
+
+                if (character == '}')
+                {
+                    openBrackets--;
                 }
 
                 stringIndex++;
             }
+
             var jsonEnd = stringIndex;
             return line.Substring(jsonStart, jsonEnd - jsonStart);
         }
