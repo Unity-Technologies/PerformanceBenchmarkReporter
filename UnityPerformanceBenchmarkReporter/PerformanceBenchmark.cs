@@ -82,7 +82,7 @@ namespace UnityPerformanceBenchmarkReporter
 
                 foreach (var xmlFileNamePath in xmlFileNamePaths)
                 {
-                    var performanceTestRun = testResultXmlParser.GetPerformanceTestRunFromXml(xmlFileNamePath);
+                    var performanceTestRun = testResultXmlParser.Parse(xmlFileNamePath);
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
                         perfTestRuns.Add(
@@ -96,7 +96,7 @@ namespace UnityPerformanceBenchmarkReporter
                 for (var i = 0; i < resultFilesOrderedByResultName.Length; i++)
                 {
                     var performanceTestRun =
-                        testResultXmlParser.GetPerformanceTestRunFromXml(resultFilesOrderedByResultName[i].Key);
+                        testResultXmlParser.Parse(resultFilesOrderedByResultName[i].Key);
 
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
