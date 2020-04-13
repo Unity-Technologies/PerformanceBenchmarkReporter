@@ -60,20 +60,22 @@ namespace UnityPerformanceBenchmarkReporter
 
         private OptionSet GetOptions(PerformanceBenchmark performanceBenchmark)
         {
-            return new OptionSet()
-                .Add("?|help|h", "Prints out the options.", option => help = option != null)
-                .Add("results|testresultsxmlsource=", "REQUIRED - Path to a test result XML filename OR directory. Directories are searched resursively. You can repeat this option with multiple result file or directory paths.",
-                    xmlsource =>
-                    {
-                        performanceBenchmark.AddXmlSourcePath(xmlsource, "results", ResultType.Test);
-                    })
-                .Add("baseline|baselinexmlsource:", "OPTIONAL - Path to a baseline XML filename.",
-                        xmlsource =>
-                        {
-                            performanceBenchmark.AddXmlSourcePath(xmlsource, "baseline", ResultType.Baseline);
-                        })
-                .Add("report|reportdirpath:", "OPTIONAL - Path to where the report will be written. Default is current working directory.",
-                    performanceBenchmark.AddReportDirPath);
+            var optionsSet = new OptionSet();
+                optionsSet.Add("?|help|h", "Prints out the options.", option => help = option != null);
+                optionsSet.Add(
+                        "results|testresultsxmlsource=", 
+                        "REQUIRED - Path to a test result XML filename OR directory. Directories are searched resursively. You can repeat this option with multiple result file or directory paths.",
+                    xmlsource => performanceBenchmark.AddXmlSourcePath(xmlsource, "results", ResultType.Test));
+                optionsSet.Add(
+                        "baseline|baselinexmlsource:", "OPTIONAL - Path to a baseline XML filename.",
+                        xmlsource => performanceBenchmark.AddXmlSourcePath(xmlsource, "baseline", ResultType.Baseline));
+                optionsSet.Add(
+                        "report|reportdirpath:", "OPTIONAL - Path to where the report will be written. Default is current working directory.",
+                        performanceBenchmark.AddReportDirPath);
+                optionsSet.Add("failonbaseline",
+                    "Enable return '1' by the reporter if a baseline is passed in and one or more matching configs is out of threshold. Disabled is default. Use option to enable, or use option and append '-' to explicitly disable.",
+                    option => performanceBenchmark.FailOnBaseline = option != null);
+            return optionsSet;
         }
 
         private void ShowHelp(string message, OptionSet optionSet)

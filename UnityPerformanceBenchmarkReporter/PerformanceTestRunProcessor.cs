@@ -64,15 +64,25 @@ namespace UnityPerformanceBenchmarkReporter
         {
             foreach (var testResult in testResults)
             {
+                // If the baseline results doesn't have a matching TestName for this result, skip it
                 if (baselineTestResults.All(r => r.TestName != testResult.TestName)) continue;
+
+                // Get the corresponding baseline testname samplegroupresults for this result's testname
                 var baselineSampleGroupResults = baselineTestResults.First(r => r.TestName == testResult.TestName).SampleGroupResults;
+
                 foreach (var sampleGroupResult in testResult.SampleGroupResults)
                 {
+                    // if we have a corresponding baseline samplegroupname in this sampleGroupResult, compare them
                     if (baselineSampleGroupResults.Any(sg => sg.SampleGroupName == sampleGroupResult.SampleGroupName))
                     {
-                        var baselineSampleGroupResult = baselineSampleGroupResults.First(sg =>
-                            sg.SampleGroupName == sampleGroupResult.SampleGroupName);
+                        // Get the baselineSampleGroupResult that corresponds to this SampleGroupResults sample group name
+                        var baselineSampleGroupResult = baselineSampleGroupResults.First(sg => sg.SampleGroupName == sampleGroupResult.SampleGroupName);
+
+                        // update this samplegroupresults baselinevalue and threshold to be that of the baselinesamplegroup so we can perform an accurate assessement of
+                        // whether or not a regression has occurred.
                         sampleGroupResult.BaselineValue = baselineSampleGroupResult.AggregatedValue;
+                        sampleGroupResult.Threshold = baselineSampleGroupResult.Threshold;
+
                         sampleGroupResult.Regressed = DeterminePerformanceResult(sampleGroupResult, sigfig) == MeasurementResult.Regression;
                     }
                 }
@@ -84,7 +94,7 @@ namespace UnityPerformanceBenchmarkReporter
             }
         }
 
-        public Dictionary<string, List<SampleGroup>> MergeTestExecutions(PerformanceTestRun performanceTestRun)
+        private Dictionary<string, List<SampleGroup>> MergeTestExecutions(PerformanceTestRun performanceTestRun)
         {
             var mergedTestExecutions = new Dictionary<string, List<SampleGroup>>();
             var testNames = performanceTestRun.Results.Select(te => te.TestName).Distinct().ToList();

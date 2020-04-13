@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using UnityPerformanceBenchmarkReporter.Entities;
 
 namespace UnityPerformanceBenchmarkReporter.Report
@@ -35,6 +36,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
         private PerformanceTestRunResult[] perfTestRunResults = { };
         private bool thisHasBenchmarkResults;
         private uint thisSigFig;
+        private bool anyTestFailures;
+        private readonly string nullString = "null";
 
         public ReportWriter(TestRunMetadataProcessor metadataProcessor)
         {
@@ -46,6 +49,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             if (results != null && results.Length > 0)
             {
+                Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+
                 thisSigFig = sigFig;
                 thisHasBenchmarkResults = hasBenchmarkResults;
                 perfTestRunResults = results;
@@ -162,6 +167,10 @@ namespace UnityPerformanceBenchmarkReporter.Report
             WriteTestConfig(streamWriter);
             WriteStatMethodTable(streamWriter);
             WriteTestTableWithVisualizations(streamWriter);
+            if (anyTestFailures)
+            {
+                streamWriter.WriteLine("<script>toggleCanvasWithNoFailures();</script>");
+            }
             streamWriter.WriteLine("</body>");
         }
 
@@ -197,7 +206,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
             if (thisHasBenchmarkResults)
             {
                 streamWriter.WriteLine("<label id=\"hidefailed\" class=\"containerLabel\">Show failed tests only");
-                streamWriter.WriteLine("<input type=\"checkbox\" onclick=\"toggleCanvasWithNoFailures()\">");
+                streamWriter.WriteLine("<input type=\"checkbox\" onclick=\"toggleCanvasWithNoFailures()\" checked>");
             }
             else
             {
@@ -395,7 +404,6 @@ namespace UnityPerformanceBenchmarkReporter.Report
             var canvasId = GetCanvasId(distinctTestName, distinctSampleGroupName);
 
             rw.WriteLine("Chart.defaults.global.elements.rectangle.borderColor = \'#fff\';");
-
             rw.WriteLine("var ctx{0} = document.getElementById('{0}').getContext('2d');", canvasId);
             rw.WriteLine("window.{0} = new Chart(ctx{0}, {{", canvasId);
             rw.WriteLine("type: 'bar',");
@@ -443,6 +451,14 @@ namespace UnityPerformanceBenchmarkReporter.Report
             rw.WriteLine("	}]");
             rw.WriteLine("},");
             rw.WriteLine("responsive: true,");
+            rw.WriteLine("animation:");
+            rw.WriteLine("{");
+            rw.WriteLine("    duration: 0 // general animation time");
+            rw.WriteLine("},");
+            rw.WriteLine("hover:");
+            rw.WriteLine("{");
+            rw.WriteLine("    animationDuration: 0 // general animation time");
+            rw.WriteLine("},");
             rw.WriteLine("responsiveAnimationDuration: 0,");
             rw.WriteLine("title: {");
             rw.WriteLine("	display: true,");
@@ -531,6 +547,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             var resultsForThisTest = GetResultsForThisTest(distinctTestName);
             var noTestRegressions = IsNoTestFailures(resultsForThisTest);
+            anyTestFailures = anyTestFailures || !noTestRegressions;
             rw.WriteLine("<tr {0}>", noTestRegressions ? "class=\"nofailures\"" : string.Empty);
             rw.WriteLine(
                 "<td class=\"testnamecell\"><div class=\"testname {0}\"><p><h5>Test Name:</h5></p><p><h3>{1}</h3></p></div></td></tr>",
@@ -647,8 +664,17 @@ namespace UnityPerformanceBenchmarkReporter.Report
                     var baselineValuesArrayString = new StringBuilder();
                     baselineValuesArrayString.Append(string.Format("var {0} = [", baselineValuesArrayName));
 
+                    var benchmarkResults = perfTestRunResults[0];
                     foreach (var performanceTestRunResult in perfTestRunResults)
                     {
+                        var aggregatedDefaultValue = nullString;
+                        var medianDefaultValue = nullString;
+                        var minDefaultValue = nullString;
+                        var maxDefaultValue = nullString;
+                        var avgDefaultValue = nullString;
+                        var stdevDefaultValue =  nullString;
+                        var baselineDefaultValue = nullString;
+
                         if (performanceTestRunResult.TestResults.Any(r =>
                             ScrubStringForSafeForVariableUse(r.TestName).Equals(distinctTestName)))
                         {
@@ -660,19 +686,50 @@ namespace UnityPerformanceBenchmarkReporter.Report
                                     ScrubStringForSafeForVariableUse(r.SampleGroupName)
                                         .Equals(distinctSampleGroupName));
                             aggregatedValuesArrayString.Append(string.Format("'{0}', ",
-                                sgResult != null ? sgResult.AggregatedValue.ToString("F" + thisSigFig) : ""));
+                                sgResult != null ? sgResult.AggregatedValue.ToString("F" + thisSigFig) : aggregatedDefaultValue));
                             medianValuesArrayString.Append(string.Format("'{0}', ",
-                                sgResult != null ? sgResult.Median.ToString("F" + thisSigFig) : ""));
+                                sgResult != null ? sgResult.Median.ToString("F" + thisSigFig) : medianDefaultValue));
                             minValuesArrayString.Append(string.Format("'{0}', ",
-                                sgResult != null ? sgResult.Min.ToString("F" + thisSigFig) : ""));
+                                sgResult != null ? sgResult.Min.ToString("F" + thisSigFig) : minDefaultValue));
                             maxValuesArrayString.Append(string.Format("'{0}' ,",
-                                sgResult != null ? sgResult.Max.ToString("F" + thisSigFig) : ""));
+                                sgResult != null ? sgResult.Max.ToString("F" + thisSigFig) : maxDefaultValue));
                             avgValuesArrayString.Append(string.Format("'{0}' ,",
-                                sgResult != null ? sgResult.Average.ToString("F" + thisSigFig) : ""));
+                                sgResult != null ? sgResult.Average.ToString("F" + thisSigFig) : avgDefaultValue));
                             stdevValuesArrayString.Append(string.Format("'{0}' ,",
-                                sgResult != null ? sgResult.StandardDeviation.ToString("F" + thisSigFig) : ""));
-                            baselineValuesArrayString.Append(string.Format("'{0}' ,",
-                                sgResult != null ? sgResult.BaselineValue.ToString("F" + thisSigFig) : ""));
+                                sgResult != null ? sgResult.StandardDeviation.ToString("F" + thisSigFig) : stdevDefaultValue));
+
+                            if (benchmarkResults.TestResults
+                                .Any(r => ScrubStringForSafeForVariableUse(r.TestName)
+                                    .Equals(distinctTestName)))
+                            {
+                                var resultMatch = benchmarkResults.TestResults
+                                    .First(r => ScrubStringForSafeForVariableUse(r.TestName)
+                                        .Equals(distinctTestName));
+                                var benchmarkSampleGroup = resultMatch.SampleGroupResults.FirstOrDefault(r =>
+                                    ScrubStringForSafeForVariableUse(r.SampleGroupName)
+                                        .Equals(distinctSampleGroupName));
+
+                                var value = thisHasBenchmarkResults && benchmarkSampleGroup != null
+                                    ? benchmarkSampleGroup.BaselineValue.ToString("F" + thisSigFig)
+                                    : baselineDefaultValue;
+
+                                baselineValuesArrayString.Append(string.Format("'{0}' ,",
+                                    value));
+                            }
+                            else
+                            {
+                                baselineValuesArrayString.Append(string.Format("'{0}' ,", baselineDefaultValue));
+                            }
+                        }
+                        else
+                        {
+                            aggregatedValuesArrayString.Append(string.Format("'{0}', ", aggregatedDefaultValue));
+                            medianValuesArrayString.Append(string.Format("'{0}', ", medianDefaultValue));
+                            minValuesArrayString.Append(string.Format("'{0}', ", minDefaultValue));
+                            maxValuesArrayString.Append(string.Format("'{0}' ,", maxDefaultValue));
+                            avgValuesArrayString.Append(string.Format("'{0}' ,", avgDefaultValue));
+                            stdevValuesArrayString.Append(string.Format("'{0}' ,", stdevDefaultValue));
+                            baselineValuesArrayString.Append(string.Format("'{0}' ,", baselineDefaultValue));
                         }
                     }
 
@@ -845,8 +902,9 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private bool SampleGroupHasSamples(IEnumerable<TestResult> resultsForThisTest, string distinctSampleGroupName)
         {
-            return resultsForThisTest.First().SampleGroupResults.Any(sg =>
+            var sampleGroupHasSamples = resultsForThisTest.SelectMany(r => r.SampleGroupResults).Any(sg =>
                 ScrubStringForSafeForVariableUse(sg.SampleGroupName) == distinctSampleGroupName);
+                return sampleGroupHasSamples;
         }
 
         private bool SampleGroupHasRegressions(IEnumerable<TestResult> resultsForThisTest,

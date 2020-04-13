@@ -29,6 +29,7 @@ namespace UnityPerformanceBenchmarkReporter
         public HashSet<string> BaselineXmlFilePaths { get; } = new HashSet<string>();
         public uint SigFig { get; }
         public string ReportDirPath { get; private set; }
+        public bool FailOnBaseline { get; set; }
 
 
         public bool BaselineResultFilesExist => BaselineXmlFilePaths.Any();
@@ -112,19 +113,16 @@ namespace UnityPerformanceBenchmarkReporter
 
                         testResults.AddRange(results);
 
-                        performanceTestRunProcessor.UpdateTestResultsBasedOnBaselineResults(baselineTestResults,
-                            testResults, SigFig);
+                        performanceTestRunProcessor.UpdateTestResultsBasedOnBaselineResults(baselineTestResults, testResults, SigFig);
 
-                        TestRunMetadataProcessor.ProcessMetadata(performanceTestRun,
-                            resultFilesOrderedByResultName[i].Key);
+                        TestRunMetadataProcessor.ProcessMetadata(performanceTestRun, resultFilesOrderedByResultName[i].Key);
 
-                        testRunResults.Add(performanceTestRunProcessor.CreateTestRunResult
-                            (
-                                performanceTestRun,
-                                results,
-                                Path.GetFileNameWithoutExtension(resultFilesOrderedByResultName[i].Key),
-                                isBaseline)
-                        );
+                        var performanceTestRunResult = performanceTestRunProcessor.CreateTestRunResult(
+                                                                performanceTestRun,
+                                                                results,
+                                                                Path.GetFileNameWithoutExtension(resultFilesOrderedByResultName[i].Key),
+                                                                isBaseline);
+                        testRunResults.Add(performanceTestRunResult);
                     }
                 }
             }

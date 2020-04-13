@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityPerformanceBenchmarkReporter.Entities;
 
 namespace UnityPerformanceBenchmarkReporter
@@ -78,13 +79,16 @@ namespace UnityPerformanceBenchmarkReporter
     {
         private readonly string[] androidOnlyMetadata =
         {
-            "AndroidMinimumSdkVersion",
-            "AndroidTargetSdkVersion",
             "AndroidBuildSystem"
         };
 
+        private readonly string[] builtInXrOnlyMetadata =
+        {
+            "EnabledXrTargets"
+        };
+
         private readonly Dictionary<Type, string[]> excludedConfigFieldNames;
-        private readonly string metadataNotAvailable = "Metadata not available";
+        private static readonly string MetadataNotAvailable = "Metadata not available";
 
         private readonly Type[] metadataTypes =
         {
@@ -98,18 +102,142 @@ namespace UnityPerformanceBenchmarkReporter
 
         public readonly List<TypeMetadata> TypeMetadata = new List<TypeMetadata>();
 
-        private readonly string[] xrOnlyMetadata =
-        {
-            "XrModel",
-            "XrDevice",
-            "EnabledXrTargets",
-            "StereoRenderingPath"
-        };
-
         private bool isAndroid;
 
-        private bool isVrSupported;
+        public bool BuiltInVrExists { get; private set; }
 
+        public class ExtractField
+        {
+            public string ExtractedFieldName;
+            public Regex ExtractionRegex;
+            public string ValueExtracted;
+        }
+
+        private readonly Dictionary<string, List<ExtractField>> extraMetadataExtractFields =
+            new Dictionary<string, List<ExtractField>>
+            {
+                {
+                    "ScriptingRuntimeVersion",
+                    new List<ExtractField>
+                    {
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "OculusPluginVersion",
+                            ExtractionRegex = new Regex("OculusPluginVersion\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "DeviceRuntimeVersion",
+                            ExtractionRegex =
+                                new Regex("deviceruntimeversion\\|[^/]*/[^/]*/[^/]*/[^/]*/([0-9]*\\.[0-9]*\\.[0-9]*):",
+                                    RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "XrSdkName",
+                            ExtractionRegex = new Regex("XrsdkName\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "XrSdkVersion",
+                            ExtractionRegex = new Regex("XrSdkVersion\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "XrSdkRevision",
+                            ExtractionRegex = new Regex("XrSdkRevision\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "XrSdkRevisionDate",
+                            ExtractionRegex = new Regex("XrSdkRevisionDate\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "XrSdkBranch",
+                            ExtractionRegex = new Regex("XrSdkBranch\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "XrManagementVersion",
+                            ExtractionRegex = new Regex("XrManagementVersion\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "XrManagementRevision",
+                            ExtractionRegex = new Regex("XrManagementRevision\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "DeviceUniqueId",
+                            ExtractionRegex = new Regex("deviceuniqueid\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "Username",
+                            ExtractionRegex = new Regex("username\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "RenderPipeline",
+                            ExtractionRegex = new Regex("renderpipeline\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "FfrLevel",
+                            ExtractionRegex = new Regex("ffrlevel\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "TestsBranch",
+                            ExtractionRegex = new Regex("testsbranch\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "TestsRev",
+                            ExtractionRegex = new Regex("testsrev\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "TestsRevDate",
+                            ExtractionRegex = new Regex("testsrevdate\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "PerfTestsPackageName",
+                            ExtractionRegex = new Regex("PerfTestsPackageName\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "PerfTestsVersion",
+                            ExtractionRegex = new Regex("PerfTestsVersion\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "PerfTestsRevision",
+                            ExtractionRegex = new Regex("PerfTestsRevision\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        }
+                    }
+                }
+            };
 
         public TestRunMetadataProcessor(Dictionary<Type, string[]> excludedFieldNames)
         {
@@ -123,7 +251,7 @@ namespace UnityPerformanceBenchmarkReporter
         /// <param name="xmlFileNamePath"></param>
         public void ProcessMetadata(PerformanceTestRun performanceTestRun, string xmlFileNamePath)
         {
-            SetIsVrSupported(new[] {performanceTestRun});
+            SetIsBuiltInVr(new[] {performanceTestRun});
             SetIsAndroid(new[] {performanceTestRun});
 
             foreach (var metadataType in metadataTypes)
@@ -140,6 +268,7 @@ namespace UnityPerformanceBenchmarkReporter
                 }
 
                 var fieldInfos = performanceTestRun.GetType().GetFields();
+
                 // If this metadataType is completely missing from the perf test run, mark it as such and move on
                 if (fieldInfos.Any(f => f.FieldType == metadataType))
                 {
@@ -166,45 +295,120 @@ namespace UnityPerformanceBenchmarkReporter
                         continue;
                     }
 
-                    var fields = obj.GetType().GetFields();
-                    var fieldsToProcess = GetFieldsToProcess(metadataType, fields);
+                    var fieldsToProcess = GetFieldsToProcess(metadataType, obj.GetType().GetFields());
 
                     // if we have valid field metadata to process
                     if (fieldsToProcess.Length > 0)
                     {
-                        foreach (var field in fieldsToProcess)
-                        {
-                            if (!typeMetadata.FieldGroups.Any(fg => fg.FieldName.Equals(field.Name)))
-                            {
-                                typeMetadata.FieldGroups.Add(new FieldGroup(field.Name));
-                            }
-
-                            var thisFieldGroup = typeMetadata.FieldGroups.First(fg => fg.FieldName.Equals(field.Name));
-
-                            // We want to keep the values array length consistent with the number of results, even for results
-                            // that are missing metadata. We do that here.
-                            BackfillFieldGroupValuesForMissingMetadata(xmlFileNamePath, thisFieldGroup, typeMetadata);
-
-                            // Add this field value
-                            var value = GetValueBasedOnType(metadataType, field, obj);
-
-                            Array.Resize(ref thisFieldGroup.Values, thisFieldGroup.Values.Length + 1);
-                            thisFieldGroup.Values[thisFieldGroup.Values.Length - 1] =
-                                new FieldValue(xmlFileNamePath, value);
-
-                            // fieldGroup.Values is sorted by result name; the first element in this array
-                            // is considered to be the reference point, regardless if it's a "baseline" or not.
-                            if (thisFieldGroup.Values[thisFieldGroup.Values.Length - 1].Value !=
-                                thisFieldGroup.Values[0].Value)
-                            {
-                                thisFieldGroup.Values[thisFieldGroup.Values.Length - 1].IsMismatched = true;
-                            }
-                        }
-
-                        typeMetadata.ValidResultCount++;
+                        ProcessMetaData(xmlFileNamePath, fieldsToProcess, typeMetadata, metadataType, obj);
                     }
                 }
             }
+        }
+
+        private void ProcessMetaData(string xmlFileNamePath, FieldInfo[] fieldsToProcess, TypeMetadata typeMetadata,
+            Type metadataType, object obj)
+        {
+            foreach (var field in fieldsToProcess)
+            {
+                var fieldName = field.Name;
+                if (!typeMetadata.FieldGroups.Any(fg => fg.FieldName.Equals(fieldName)))
+                {
+                    typeMetadata.FieldGroups.Add(new FieldGroup(fieldName));
+                }
+
+                var thisFieldGroup = typeMetadata.FieldGroups.First(fg => fg.FieldName.Equals(fieldName));
+
+
+                if (extraMetadataExtractFields.ContainsKey(fieldName))
+                {
+                    foreach (var extractField in extraMetadataExtractFields[fieldName])
+                    {
+                        FieldGroup newFieldGroup;
+                        if (!typeMetadata.FieldGroups.Any(fg => fg.FieldName.Equals(extractField.ExtractedFieldName)))
+                        {
+                            newFieldGroup = new FieldGroup(extractField.ExtractedFieldName);
+                            typeMetadata.FieldGroups.Add(newFieldGroup);
+                        }
+                        else
+                        {
+                            newFieldGroup =
+                                typeMetadata.FieldGroups.First(fg =>
+                                    fg.FieldName.Equals(extractField.ExtractedFieldName));
+                        }
+
+                        var value = GetValueBasedOnType(metadataType, field, obj);
+
+                        extractField.ValueExtracted = ExtractValue(extractField.ExtractionRegex, value);
+
+                        InsertFieldValueWithBackfill(xmlFileNamePath, newFieldGroup, typeMetadata,
+                            extractField.ValueExtracted);
+                        DetermineIfMismatchExists(typeMetadata, newFieldGroup);
+                    }
+
+                    InsertFieldValueWithBackfill(xmlFileNamePath, thisFieldGroup, typeMetadata, MetadataNotAvailable);
+                    DetermineIfMismatchExists(typeMetadata, thisFieldGroup);
+                }
+                else
+                {
+                    var thisValue = GetValueBasedOnType(metadataType, field, obj);
+                    InsertFieldValueWithBackfill(xmlFileNamePath, thisFieldGroup, typeMetadata, thisValue);
+                    DetermineIfMismatchExists(typeMetadata, thisFieldGroup);
+                }
+            }
+
+            foreach (var fieldGroup in typeMetadata.FieldGroups.Where(fg =>
+                fg.Values.Length < typeMetadata.ValidResultCount + 1))
+            {
+                while (fieldGroup.Values.Length < typeMetadata.ValidResultCount + 1)
+                {
+                    InsertFieldValue(xmlFileNamePath, fieldGroup, MetadataNotAvailable, isMismatched: true);
+                }
+            }
+
+            typeMetadata.ValidResultCount++;
+        }
+
+        private static void DetermineIfMismatchExists(TypeMetadata typeMetadata, FieldGroup thisFieldGroup)
+        {
+            // fieldGroup.Values is sorted by result name; the first element in this array
+            // is considered to be the reference point, regardless if it's a "baseline" or not.
+            if (typeMetadata.FieldGroups.Any(fg => fg.FieldName.Equals(thisFieldGroup.FieldName)) &&
+                thisFieldGroup.Values.Length > 0 && thisFieldGroup.Values[thisFieldGroup.Values.Length - 1].Value !=
+                thisFieldGroup.Values[0].Value)
+            {
+                thisFieldGroup.Values[thisFieldGroup.Values.Length - 1].IsMismatched = true;
+            }
+        }
+
+        private string ExtractValue(Regex regex, string value)
+        {
+            var matches = regex.Matches(value);
+            var matchValue = matches.Count > 0 ? matches[0].Groups[1].Value : MetadataNotAvailable;
+
+            return matchValue;
+        }
+
+        private void InsertFieldValueWithBackfill(string xmlFileNamePath, FieldGroup thisFieldGroup,
+            TypeMetadata typeMetadata,
+            string value)
+        {
+            // We want to keep the values array length consistent with the number of results, even for results
+            // that are missing metadata. We do that here.
+            BackfillFieldGroupValuesForMissingMetadata(xmlFileNamePath, thisFieldGroup, typeMetadata);
+
+            InsertFieldValue(xmlFileNamePath, thisFieldGroup, value);
+        }
+
+        private static void InsertFieldValue(string xmlFileNamePath, FieldGroup thisFieldGroup, string value,
+            bool isMismatched = false)
+        {
+            Array.Resize(ref thisFieldGroup.Values, thisFieldGroup.Values.Length + 1);
+            thisFieldGroup.Values[thisFieldGroup.Values.Length - 1] =
+                new FieldValue(xmlFileNamePath, value)
+                {
+                    IsMismatched = isMismatched
+                };
         }
 
         private void BackfillFieldGroupValuesForMissingMetadata(string xmlFileNamePath, FieldGroup fieldGroup,
@@ -216,7 +420,7 @@ namespace UnityPerformanceBenchmarkReporter
                 {
                     Array.Resize(ref fieldGroup.Values, fieldGroup.Values.Length + 1);
                     fieldGroup.Values[fieldGroup.Values.Length - 1] =
-                        new FieldValue(xmlFileNamePath, metadataNotAvailable);
+                        new FieldValue(xmlFileNamePath, MetadataNotAvailable);
 
                     // fieldGroup.Values is sorted by result name; the first element in this array
                     // is considered to be the reference point, regardless if it's a "baseline" or not.
@@ -305,13 +509,24 @@ namespace UnityPerformanceBenchmarkReporter
             var value = field.GetValue((T) obj);
             if (value == null)
             {
-                value = metadataNotAvailable;
+                value = MetadataNotAvailable;
             }
             else
             {
                 if (value.GetType() != typeof(string))
                 {
                     value = Convert.ToString(value);
+                    if ((string) value == string.Empty)
+                    {
+                        value = MetadataNotAvailable;
+                    }
+                }
+                else
+                {
+                    if ((string) value == string.Empty)
+                    {
+                        value = MetadataNotAvailable;
+                    }
                 }
             }
 
@@ -321,9 +536,10 @@ namespace UnityPerformanceBenchmarkReporter
         private FieldInfo[] GetFieldsToProcess(Type metadataType, FieldInfo[] fields)
         {
             // Derive a subset of fields to process from validFieldNames
-            var excludedFieldNames = excludedConfigFieldNames !=  null && excludedConfigFieldNames.ContainsKey(metadataType)
-                ? excludedConfigFieldNames[metadataType]
-                : null;
+            var excludedFieldNames =
+                excludedConfigFieldNames != null && excludedConfigFieldNames.ContainsKey(metadataType)
+                    ? excludedConfigFieldNames[metadataType]
+                    : null;
             var validFieldNames = GetValidFieldNames(excludedFieldNames, fields.Select(f => f.Name).ToArray());
             var fieldsToProcess = fields.Join(validFieldNames, f => f.Name, s => s, (field, vField) => field).ToArray();
             return fieldsToProcess;
@@ -369,9 +585,9 @@ namespace UnityPerformanceBenchmarkReporter
                 validFieldNames = validFieldNames.Where(k1 => excludedFieldNames.All(k2 => k2 != k1)).ToArray();
             }
 
-            if (!isVrSupported)
+            if (!BuiltInVrExists)
             {
-                validFieldNames = validFieldNames.Where(k1 => xrOnlyMetadata.All(k2 => k2 != k1)).ToArray();
+                validFieldNames = validFieldNames.Where(k1 => builtInXrOnlyMetadata.All(k2 => k2 != k1)).ToArray();
             }
 
             if (!isAndroid)
@@ -382,11 +598,11 @@ namespace UnityPerformanceBenchmarkReporter
             return validFieldNames;
         }
 
-        private void SetIsVrSupported(PerformanceTestRun[] performanceTestRuns)
+        private void SetIsBuiltInVr(PerformanceTestRun[] performanceTestRuns)
         {
             foreach (var performanceTestRun in performanceTestRuns)
             {
-                isVrSupported = isVrSupported || performanceTestRun.PlayerSettings?.EnabledXrTargets != null && performanceTestRun.PlayerSettings.EnabledXrTargets.Any();
+                BuiltInVrExists = BuiltInVrExists || performanceTestRun.PlayerSettings.EnabledXrTargets != null && performanceTestRun.PlayerSettings.EnabledXrTargets.Any();
             }
         }
 
@@ -398,5 +614,19 @@ namespace UnityPerformanceBenchmarkReporter
                             performanceTestRun.BuildSettings.Platform.Equals("Android");
             }
         }
+
+        public void PerformFinalMetadataUpdate(PerformanceBenchmark performanceBenchmark)
+        {
+            // The keys in the extraMetadataExtractFields structure have additional embedded metadata that we extract out.
+            // This renders the raw, unextracted, value of this field unusable, so we discard it
+            foreach (var metadataName in extraMetadataExtractFields.Keys)
+            {
+                foreach (var typeMetadata in performanceBenchmark.TestRunMetadataProcessor.TypeMetadata)
+                {
+                    typeMetadata.FieldGroups.RemoveAll(fg => fg.FieldName.Equals(metadataName));
+                }
+            }
+        }
     }
 }
+
