@@ -234,6 +234,24 @@ namespace UnityPerformanceBenchmarkReporter
                             ExtractedFieldName = "PerfTestsRevision",
                             ExtractionRegex = new Regex("PerfTestsRevision\\|([^|]*)",
                                 RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "AndroidTargetArchitecture",
+                            ExtractionRegex = new Regex("AndroidTargetArchitecture\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "UrpVersion",
+                            ExtractionRegex = new Regex("UrpVersion\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
+                        },
+                        new ExtractField
+                        {
+                            ExtractedFieldName = "UrpRevision",
+                            ExtractionRegex = new Regex("UrpRevision\\|([^|]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase)
                         }
                     }
                 }

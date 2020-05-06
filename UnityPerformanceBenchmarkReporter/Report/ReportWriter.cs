@@ -206,7 +206,18 @@ namespace UnityPerformanceBenchmarkReporter.Report
             if (thisHasBenchmarkResults)
             {
                 streamWriter.WriteLine("<label id=\"hidefailed\" class=\"containerLabel\">Show failed tests only");
-                streamWriter.WriteLine("<input type=\"checkbox\" onclick=\"toggleCanvasWithNoFailures()\" checked>");
+
+                //var regressed = perfTestRunResults.SelectMany(ptr => ptr.TestResults).SelectMany(t => t.SampleGroupResults).Any(a => a.Regressed);
+
+                if (perfTestRunResults.SelectMany(ptr => ptr.TestResults).SelectMany(t => t.SampleGroupResults).Any(a => a.Regressed))
+                {
+                    streamWriter.WriteLine("<input type=\"checkbox\" onclick=\"toggleCanvasWithNoFailures()\" checked>");
+                }
+                else
+                {
+                    streamWriter.WriteLine("<input type=\"checkbox\" onclick=\"toggleCanvasWithNoFailures()\">");
+                }
+                
             }
             else
             {
