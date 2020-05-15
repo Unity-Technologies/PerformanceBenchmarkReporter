@@ -189,7 +189,7 @@ namespace UnityPerformanceBenchmarkReporter
                 TestSuite = runResults.TestSuite,
                 StartTime =
                     new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(
-                        runResults.StartTime),
+                        runResults.StartTime).ToLocalTime(),
                 TestResults = testResults,
                 PlayerSystemInfo = runResults.PlayerSystemInfo,
                 EditorVersion = runResults.EditorVersion,
