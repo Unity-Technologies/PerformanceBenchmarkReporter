@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="5" result="Passed" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2020-05-15 09:58:24Z" end-time="2020-05-15 09:58:31Z" duration="7.0200024">
+  <test-suite type="TestSuite" id="1000" name="PerformanceTests" fullname="PerformanceTests" runstate="Runnable" testcasecount="18" result="Passed" start-time="2020-05-15 09:58:24Z" end-time="2020-05-15 09:58:31Z" duration="7.020002" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties />
+    <test-suite type="Assembly" id="1007" name="PerformanceTests.PlayMode.dll" fullname="C:/Unity/PerformanceTests/Library/ScriptAssemblies/PerformanceTests.PlayMode.dll" runstate="Runnable" testcasecount="5" result="Passed" start-time="2020-05-15 09:58:24Z" end-time="2020-05-15 09:58:31Z" duration="6.950406" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="15600" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+      </properties>
+      <test-suite type="TestSuite" id="1008" name="PerformanceTests" fullname="PerformanceTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2020-05-15 09:58:24Z" end-time="2020-05-15 09:58:31Z" duration="6.914932" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1009" name="PlayMode" fullname="PerformanceTests.PlayMode" runstate="Runnable" testcasecount="5" result="Passed" start-time="2020-05-15 09:58:24Z" end-time="2020-05-15 09:58:31Z" duration="6.886580" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1001" name="PerformanceTests" fullname="PerformanceTests.PlayMode.PerformanceTests" classname="PerformanceTests.PlayMode.PerformanceTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2020-05-15 09:58:24Z" end-time="2020-05-15 09:58:31Z" duration="6.855897" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1005" name="ArrayForEachTest" fullname="PerformanceTests.PlayMode.PerformanceTests.ArrayForEachTest" methodname="ArrayForEachTest" classname="PerformanceTests.PlayMode.PerformanceTests" runstate="Runnable" seed="1032039511" result="Passed" start-time="2020-05-15 09:58:24Z" end-time="2020-05-15 09:58:26Z" duration="1.535746" asserts="0">
+              <properties>
+                <property name="Category" value="Performance" />
+                <property name="Category" value="Loops" />
+              </properties>
+              <output><![CDATA[Time.GC() Undefined Median:0.00 Min:0.00 Max:0.02 Avg:0.00 Std:0.01 SampleCount: 9 Sum: 0.03
+Time Microsecond Median:37.07 Min:36.76 Max:38.40 Avg:37.31 Std:0.53 SampleCount: 9 Sum: 335.81
+
+##performancetestresult2:{"SampleGroups":[{"Name":"Time.GC()","Unit":8,"IncreaseIsBetter":false,"Samples":[0.0,0.0,0.019040644452581471,0.0,0.0,0.0,0.014646649578908825,0.0,0.0],"Min":0.0,"Max":0.019040644452581471,"Median":0.0,"Average":0.0037430326701655883,"StandardDeviation":0.0070787463024310337,"Sum":0.033687294031490296},{"Name":"Time","Unit":2,"IncreaseIsBetter":false,"Samples":[0.037063493225924574,0.036755510801904062,0.037074112046869272,0.037644672281215708,0.037248187477114593,0.036854558769681404,0.038400292932991555,0.036860161113145384,0.037910252654705212],"Min":0.036755510801904062,"Max":0.038400292932991555,"Median":0.037074112046869272,"Average":0.037312360144839088,"StandardDeviation":0.00052688464326345057,"Sum":0.33581124130355178}],"Name":"PerformanceTests.PlayMode.PerformanceTests.ArrayForEachTest","Version":"1","Categories":["Performance","Loops"]}
+##performancetestruninfo2:{"TestSuite":"Playmode","Date":1589536700939,"Player":{"Development":true,"ScreenWidth":1920,"ScreenHeight":1080,"ScreenRefreshRate":60,"Fullscreen":false,"Vsync":1,"AntiAliasing":2,"Batchmode":false,"RenderThreadingMode":"MultiThreaded","GpuSkinning":true,"Platform":"WindowsEditor","ColorSpace":"Gamma","AnisotropicFiltering":"ForceEnable","BlendWeights":"FourBones","GraphicsApi":"Direct3D11","ScriptingBackend":"IL2CPP","AndroidTargetSdkVersion":"AndroidApiLevelAuto","AndroidBuildSystem":"Gradle","BuildTarget":"Android","StereoRenderingPath":"MultiPass"},"Hardware":{"OperatingSystem":"Windows 10  (10.0.0) 64bit","DeviceModel":"930X5J/910S5J/940X5J (SAMSUNG ELECTRONICS CO., LTD.)","DeviceName":"DESKTOP-FS0JNSD","ProcessorType":"Intel(R) Core(TM) i5-4200U CPU @ 1.60GHz","ProcessorCount":4,"GraphicsDeviceName":"Intel(R) HD Graphics Family","SystemMemorySizeMB":8106},"Editor":{"Version":"2019.3.0f6","Branch":"2019.3/staging","Changeset":"27ab2135bccf","Date":1579669995},"Dependencies":["com.unity.collab-proxy@1.2.16","com.unity.ide.rider@1.1.4","com.unity.ide.vscode@1.1.4","com.unity.test-framework@1.1.14","com.unity.test-framework.performance@2.1.0-preview","com.unity.textmeshpro@2.0.1","com.unity.timeline@1.2.10","com.unity.ugui@1.0.0","com.unity.modules.ai@1.0.0","com.unity.modules.androidjni@1.0.0","com.unity.modules.animation@1.0.0","com.unity.modules.assetbundle@1.0.0","com.unity.modules.audio@1.0.0","com.unity.modules.cloth@1.0.0","com.unity.modules.director@1.0.0","com.unity.modules.imageconversion@1.0.0","com.unity.modules.imgui@1.0.0","com.unity.modules.jsonserialize@1.0.0","com.unity.modules.particlesystem@1.0.0","com.unity.modules.physics@1.0.0","com.unity.modules.physics2d@1.0.0","com.unity.modules.screencapture@1.0.0","com.unity.modules.terrain@1.0.0","com.unity.modules.terrainphysics@1.0.0","com.unity.modules.tilemap@1.0.0","com.unity.modules.ui@1.0.0","com.unity.modules.uielements@1.0.0","com.unity.modules.umbra@1.0.0","com.unity.modules.unityanalytics@1.0.0","com.unity.modules.unitywebrequest@1.0.0","com.unity.modules.unitywebrequestassetbundle@1.0.0","com.unity.modules.unitywebrequestaudio@1.0.0","com.unity.modules.unitywebrequesttexture@1.0.0","com.unity.modules.unitywebrequestwww@1.0.0","com.unity.modules.vehicles@1.0.0","com.unity.modules.video@1.0.0","com.unity.modules.vr@1.0.0","com.unity.modules.wind@1.0.0","com.unity.modules.xr@1.0.0"],"Results":[]}
+]]></output>
+            </test-case>
+            <test-case id="1002" name="ArrayTest" fullname="PerformanceTests.PlayMode.PerformanceTests.ArrayTest" methodname="ArrayTest" classname="PerformanceTests.PlayMode.PerformanceTests" runstate="Runnable" seed="1760098222" result="Passed" start-time="2020-05-15 09:58:26Z" end-time="2020-05-15 09:58:27Z" duration="1.166864" asserts="0">
+              <properties>
+                <property name="Category" value="Performance" />
+                <property name="Category" value="Loops" />
+              </properties>
+              <output><![CDATA[Time Microsecond Median:40.88 Min:40.46 Max:41.91 Avg:41.09 Std:0.55 SampleCount: 9 Sum: 369.79
+
+##performancetestresult2:{"SampleGroups":[{"Name":"Time","Unit":2,"IncreaseIsBetter":false,"Samples":[0.0407982484725051,0.041891527494908355,0.041320529531568242,0.04053246435845214,0.040502077393075347,0.041497678207739308,0.040456048879837038,0.040875845213849273,0.041912219959266757],"Min":0.040456048879837038,"Max":0.041912219959266757,"Median":0.040875845213849273,"Average":0.0410874043901335,"StandardDeviation":0.000550469594487601,"Sum":0.36978663951120155}],"Name":"PerformanceTests.PlayMode.PerformanceTests.ArrayTest","Version":"1","Categories":["Performance","Loops"]}
+]]></output>
+            </test-case>
+            <test-case id="1006" name="ListForEachTest" fullname="PerformanceTests.PlayMode.PerformanceTests.ListForEachTest" methodname="ListForEachTest" classname="PerformanceTests.PlayMode.PerformanceTests" runstate="Runnable" seed="1870959050" result="Passed" start-time="2020-05-15 09:58:27Z" end-time="2020-05-15 09:58:28Z" duration="1.422326" asserts="0">
+              <properties>
+                <property name="Category" value="Performance" />
+                <property name="Category" value="Loops" />
+                <property name="Version" value="Unity.PerformanceTesting.VersionAttribute" />
+              </properties>
+              <output><![CDATA[Time.GC() Undefined Median:0.00 Min:0.00 Max:0.09 Avg:0.02 Std:0.04 SampleCount: 9 Sum: 0.18
+Time Microsecond Median:259.92 Min:258.32 Max:266.19 Avg:261.64 Std:2.99 SampleCount: 9 Sum: 2354.73
+
+##performancetestresult2:{"SampleGroups":[{"Name":"Time.GC()","Unit":8,"IncreaseIsBetter":false,"Samples":[0.0,0.0,0.0,0.088541666666666671,0.0,0.0,0.0,0.0,0.088541666666666671],"Min":0.0,"Max":0.088541666666666671,"Median":0.0,"Average":0.019675925925925927,"StandardDeviation":0.036810286791178821,"Sum":0.17708333333333334},{"Name":"Time","Unit":2,"IncreaseIsBetter":false,"Samples":[0.25831614583333334,0.25884635416666679,0.25875989583333325,0.26360911458333308,0.26584921874999995,0.26619401041666685,0.25991875000000003,0.26364348958333333,0.25959062499999952],"Min":0.25831614583333334,"Max":0.26619401041666685,"Median":0.25991875000000003,"Average":0.26163640046296288,"StandardDeviation":0.0029936581585193437,"Sum":2.354727604166666}],"Name":"PerformanceTests.PlayMode.PerformanceTests.ListForEachTest","Version":"1.0.0","Categories":["Performance","Loops"]}
+]]></output>
+            </test-case>
+            <test-case id="1003" name="ListTest" fullname="PerformanceTests.PlayMode.PerformanceTests.ListTest" methodname="ListTest" classname="PerformanceTests.PlayMode.PerformanceTests" runstate="Runnable" seed="1218014569" result="Passed" start-time="2020-05-15 09:58:28Z" end-time="2020-05-15 09:58:30Z" duration="1.267236" asserts="0">
+              <properties>
+                <property name="Category" value="Performance" />
+                <property name="Category" value="Loops" />
+              </properties>
+              <output><![CDATA[Time.GC() Undefined Median:0.00 Min:0.00 Max:0.05 Avg:0.01 Std:0.02 SampleCount: 9 Sum: 0.10
+Time Microsecond Median:147.77 Min:145.10 Max:174.58 Avg:150.74 Std:8.91 SampleCount: 9 Sum: 1356.67
+
+##performancetestresult2:{"SampleGroups":[{"Name":"Time.GC()","Unit":8,"IncreaseIsBetter":false,"Samples":[0.0,0.051051051051051052,0.0,0.0,0.0,0.051051051051051052,0.0,0.0,0.0],"Min":0.0,"Max":0.051051051051051052,"Median":0.0,"Average":0.011344678011344679,"StandardDeviation":0.021223949140859861,"Sum":0.1021021021021021},{"Name":"Time","Unit":2,"IncreaseIsBetter":false,"Samples":[0.14580300300300303,0.14602597597597591,0.14789759759759769,0.14829804804804814,0.14776981981981988,0.17458243243243238,0.1450980480480481,0.15535675675675684,0.14583363363363355],"Min":0.1450980480480481,"Max":0.17458243243243238,"Median":0.14776981981981988,"Average":0.15074059059059064,"StandardDeviation":0.0089140363083492959,"Sum":1.3566653153153156}],"Name":"PerformanceTests.PlayMode.PerformanceTests.ListTest","Version":"1","Categories":["Performance","Loops"]}
+]]></output>
+            </test-case>
+            <test-case id="1004" name="ToArrayTest" fullname="PerformanceTests.PlayMode.PerformanceTests.ToArrayTest" methodname="ToArrayTest" classname="PerformanceTests.PlayMode.PerformanceTests" runstate="Runnable" seed="1429026556" result="Passed" start-time="2020-05-15 09:58:30Z" end-time="2020-05-15 09:58:31Z" duration="1.401568" asserts="0">
+              <properties>
+                <property name="Category" value="Performance" />
+                <property name="Category" value="Loops" />
+              </properties>
+              <output><![CDATA[Time.GC() Undefined Median:1.00 Min:1.00 Max:1.04 Avg:1.01 Std:0.02 SampleCount: 9 Sum: 9.09
+Time Microsecond Median:123.17 Min:119.69 Max:225.45 Avg:150.00 Std:36.83 SampleCount: 9 Sum: 1350.04
+
+##performancetestresult2:{"SampleGroups":[{"Name":"Time.GC()","Unit":8,"IncreaseIsBetter":false,"Samples":[1.0,1.0,1.0,1.0434227330779056,1.0,1.0,1.0434227330779056,1.0,1.0],"Min":1.0,"Max":1.0434227330779056,"Median":1.0,"Average":1.0096494962395346,"StandardDeviation":0.018052554441650947,"Sum":9.0868454661558111},{"Name":"Time","Unit":2,"IncreaseIsBetter":false,"Samples":[0.12043014048531292,0.1231670498084291,0.11969259259259263,0.12291047254150703,0.12209157088122609,0.22544993614303954,0.19099808429118778,0.17827088122605361,0.14702822477650065],"Min":0.11969259259259263,"Max":0.22544993614303954,"Median":0.1231670498084291,"Average":0.15000432808287215,"StandardDeviation":0.036828816388927939,"Sum":1.3500389527458494}],"Name":"PerformanceTests.PlayMode.PerformanceTests.ToArrayTest","Version":"1","Categories":["Performance","Loops"]}
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
