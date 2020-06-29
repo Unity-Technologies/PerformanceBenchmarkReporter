@@ -1,0 +1,346 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Unity Performance Benchmark Report</title>
+<script src="Chart.bundle.js"></script>
+<link rel="stylesheet" href="styles.css">
+<style>
+canvas {
+-moz-user-select: none;
+-webkit-user-select: none;
+-ms-user-select: none;
+}
+</style>
+<script>
+var failColor = "rgba(255, 61, 103, 0.81)";
+var passColor = "rgba(51, 136, 240, 0.75)";
+var baselineColor = "rgb(255, 159, 64)";
+function showTestConfiguration() {
+	var x = document.getElementById("testconfig");
+	var t = document.getElementById("toggleconfig");
+	var img = t.childNodes[0];
+	if (x.style.display === "" || x.style.display === "none") {
+x.style.display = "block";
+	document.getElementById("toggleconfig").innerHTML= (img.outerHTML || "") + "Hide Test Configuration";
+	} else {
+x.style.display = "none";
+	var img = t.childNodes[0];
+	document.getElementById("toggleconfig").innerHTML= (img.outerHTML || "") + "Show Test Configuration";
+	}
+}
+function toggleCanvasWithNoFailures() {
+	var x = document.getElementsByClassName("nofailures");
+              for(var i = 0; i < x.length; i++)
+              {
+	    if (x[i].style.display === "none") {
+    x[i].getAttribute('style');
+    x[i].removeAttribute('style');
+	    } else {
+    x[i].style.display = "none";
+	    }
+	}
+}
+var testRuns = [['03/27/2020','13:09:20'], ['03/27/2020','13:52:11']];
+var OculusStatsTests_StatsTest_EmptyScene_FrameTime_Aggregated_Values = ['51.60', '40.13'];
+var OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime_Aggregated_Values = ['16.93', '16.93'];
+var OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime_Aggregated_Values = ['18.00', '36.11'];
+var OculusStatsTests_StatsTest_EmptyScene_FrameTime_data = {
+	labels: testRuns,
+	datasets: [{
+		type: 'line',
+		fill: false,
+		backgroundColor: [passColor, passColor],
+		borderWidth: 4,
+		label: "Level 1",
+		data: OculusStatsTests_StatsTest_EmptyScene_FrameTime_Aggregated_Values
+		},
+		{
+		type: 'line',
+		fill: false,
+		backgroundColor: [failColor, failColor],
+		borderWidth: 4,
+		label: "Level 2",
+		data: OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime_Aggregated_Values
+		}
+	]
+};
+var OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime_data = {
+	labels: testRuns,
+	datasets: [{
+backgroundColor: [passColor, passColor],
+borderWidth: 1,
+label: "Millisecond",
+data: OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime_Aggregated_Values
+	}
+	]
+};
+var OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime_data = {
+	labels: testRuns,
+	datasets: [{
+backgroundColor: [passColor, passColor],
+borderWidth: 1,
+label: "Millisecond",
+data: OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime_Aggregated_Values
+	}
+	]
+};
+window.onload = function() {
+Chart.defaults.global.elements.rectangle.borderColor = '#fff';
+var ctxOculusStatsTests_StatsTest_EmptyScene_FrameTime = document.getElementById('OculusStatsTests_StatsTest_EmptyScene_FrameTime').getContext('2d');
+window.OculusStatsTests_StatsTest_EmptyScene_FrameTime = new Chart(ctxOculusStatsTests_StatsTest_EmptyScene_FrameTime, {
+type: 'bar',
+data: OculusStatsTests_StatsTest_EmptyScene_FrameTime_data,
+options: {
+tooltips:
+{
+mode: 'index',
+callbacks: {
+title: function(tooltipItems, data) {
+var color = OculusStatsTests_StatsTest_EmptyScene_FrameTime_data.datasets[0].backgroundColor[tooltipItems[0].index];
+return tooltipItems[0].xLabel + (color === failColor ? " regressed" : " within threshold");}//,
+//beforeFooter: function(tooltipItems, data) {
+// var std = OculusStatsTests_StatsTest_EmptyScene_FrameTime_Stdev_Values[tooltipItems[0].index];
+//var footermsg = ['Threshold: 0.15']; footermsg.push('Standard deviation: ' + std); footermsg.push('Sample count: 4'); return footermsg;},
+},
+footerFontStyle: 'normal'
+},
+legend: { 
+	display: true,
+	position: "right"},
+elements: {
+	point: {
+		pointStyle: 'rectRot'
+	}
+},
+maintainAspectRatio: false,
+scales: {
+	yAxes: [{
+display: true,
+scaleLabel:
+{
+    display: true,
+    labelString: "Median Millisecond"
+},
+ticks: {
+suggestedMax: .001,
+suggestedMin: .0
+}
+	}],
+	xAxes: [{
+display: true,
+scaleLabel:
+{
+    display: true,
+    labelString: "Result File / Execution Time"
+}
+	}]
+},
+responsive: true,
+animation:
+{
+    duration: 0 // general animation time
+},
+hover:
+{
+    animationDuration: 0 // general animation time
+},
+responsiveAnimationDuration: 0,
+title: {
+	display: true,
+	text: "FrameTime"
+}
+}
+	});
+	
+Chart.defaults.global.elements.rectangle.borderColor = '#fff';
+var ctxOculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime = document.getElementById('OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime').getContext('2d');
+window.OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime = new Chart(ctxOculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime, {
+type: 'bar',
+data: OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime_data,
+options: {
+tooltips:
+{
+mode: 'index',
+callbacks: {
+title: function(tooltipItems, data) {
+var color = OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime_data.datasets[0].backgroundColor[tooltipItems[0].index];
+return tooltipItems[0].xLabel + (color === failColor ? " regressed" : " within threshold");},
+beforeFooter: function(tooltipItems, data) {
+var std = OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime_Stdev_Values[tooltipItems[0].index];
+var footermsg = ['Threshold: 0.15']; footermsg.push('Standard deviation: ' + std); footermsg.push('Sample count: 4'); return footermsg;},
+},
+footerFontStyle: 'normal'
+},
+legend: { display: true},
+maintainAspectRatio: false,
+scales: {
+	yAxes: [{
+display: true,
+scaleLabel:
+{
+    display: true,
+    labelString: "Median Millisecond"
+},
+ticks: {
+suggestedMax: .001,
+suggestedMin: .0
+}
+	}],
+	xAxes: [{
+display: true,
+scaleLabel:
+{
+    display: true,
+    labelString: "Result File / Execution Time"
+}
+	}]
+},
+responsive: true,
+animation:
+{
+    duration: 0 // general animation time
+},
+hover:
+{
+    animationDuration: 0 // general animation time
+},
+responsiveAnimationDuration: 0,
+title: {
+	display: true,
+	text: "FrameTime"
+}
+}
+	});
+	
+Chart.defaults.global.elements.rectangle.borderColor = '#fff';
+var ctxOculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime = document.getElementById('OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime').getContext('2d');
+window.OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime = new Chart(ctxOculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime, {
+type: 'bar',
+data: OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime_data,
+options: {
+tooltips:
+{
+mode: 'index',
+callbacks: {
+title: function(tooltipItems, data) {
+var color = OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime_data.datasets[0].backgroundColor[tooltipItems[0].index];
+return tooltipItems[0].xLabel + (color === failColor ? " regressed" : " within threshold");},
+beforeFooter: function(tooltipItems, data) {
+var std = OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime_Stdev_Values[tooltipItems[0].index];
+var footermsg = ['Threshold: 0.15']; footermsg.push('Standard deviation: ' + std); footermsg.push('Sample count: 4'); return footermsg;},
+},
+footerFontStyle: 'normal'
+},
+legend: 
+	{ display: true,
+	  position: "right",
+	  align: top},
+maintainAspectRatio: false,
+scales: {
+	yAxes: [{
+display: true,
+scaleLabel:
+{
+    display: true,
+    labelString: "Median Millisecond"
+},
+ticks: {
+suggestedMax: .001,
+suggestedMin: .0
+}
+	}],
+	xAxes: [{
+display: true,
+scaleLabel:
+{
+    display: true,
+    labelString: "Result File / Execution Time"
+}
+	}]
+},
+responsive: true,
+animation:
+{
+    duration: 0 // general animation time
+},
+hover:
+{
+    animationDuration: 0 // general animation time
+},
+responsiveAnimationDuration: 0,
+title: {
+	display: true,
+	text: "FrameTime"
+}
+}
+	});
+	
+};
+</script>
+</head>
+<body>
+<table class="titletable">
+<tr><td class="logocell"><img src="UnityLogo.png" alt="Unity" class="logo"></td></tr>
+<tr><td class="titlecell"><div class="title"><h1>Performance Benchmark Report</h1></div></td></tr>
+</table>
+<table class="testconfigtable"><tr><td class="flex">
+<div class="toggleconfigwrapper"><button id="toggleconfig" class="button" onclick="showTestConfiguration()"><image class="warning" src="warning.png" alt="Mismatched test configurations present."></img>Show Test Configuration</button><span class="configwarning">Mismatched test configurations present</span></div><a title="Help" class="help" href="https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki" target="_blank"><div class="helpwrapper"></div></a>
+</td></tr>
+<tr><td>
+<div id="testconfig" class="testconfig">
+<div><hr/></div><div class="typename">PlayerSystemInfo</div><div><hr/></div>
+<div class="systeminfo"><pre>
+<div class="fieldgroup"><div class="fieldname">OperatingSystem</div><div class="fieldvalue">Android OS 7.0 / API-24 (NRD90M/G930AUCS4BQH1)</div></div><div class="fieldgroup"><div class="fieldname">DeviceModel</div><div class="fieldvalue">samsung SAMSUNG-SM-G930A</div></div><div class="fieldgroup"><div class="fieldname">DeviceName</div><div class="fieldvalue">SAMSUNG-SM-G930A</div></div><div class="fieldgroup"><div class="fieldname">ProcessorType</div><div class="fieldvalue">ARM64 FP ASIMD AES</div></div><div class="fieldgroup"><div class="fieldname">ProcessorCount</div><div class="fieldvalue">4</div></div><div class="fieldgroup"><div class="fieldname">GraphicsDeviceName</div><div class="fieldvalue">Adreno (TM) 530</div></div><div class="fieldgroup"><div class="fieldname">SystemMemorySize</div><div class="fieldvalue">3417</div></div><div class="fieldgroup"><div class="fieldname">XrDevice</div><div class="fieldvalue">Metadata not available</div></div>
+</pre></div>
+<div><hr/></div><div class="typenamewarning">PlayerSettings</div><div><hr/></div>
+<div class="systeminfo"><pre>
+<div class="fieldgroup"><div class="fieldname">ScriptingBackend</div><div class="fieldvalue">Mono2x</div></div><div class="fieldgroup"><div class="fieldname">OculusPluginVersion</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">DeviceRuntimeVersion</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">XrSdkName</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">XrSdkVersion</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">XrSdkRevision</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">XrSdkRevisionDate</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">XrSdkBranch</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">XrManagementVersion</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">XrManagementRevision</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">DeviceUniqueId</div><div class="fieldvalue">881d5e2c1b201c0e3f5331494fd1ea10dcf68810</div></div><div class="fieldgroup"><div class="fieldname">Username</div><div class="fieldvalue">seans</div></div><div class="fieldgroup"><div class="fieldname">RenderPipeline</div><div class="fieldvalue">BuiltInRenderer</div></div><div class="fieldgroup"><div class="fieldname">FfrLevel</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">TestsBranch</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">TestsRev</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">TestsRevDate</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">PerfTestsPackageName</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">PerfTestsVersion</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">PerfTestsRevision</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">AndroidTargetArchitecture</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">UrpVersion</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">UrpRevision</div><div class="fieldvalue">Metadata not available</div></div><div class="fieldgroup"><div class="fieldname">GpuSkinning</div><div class="fieldvalue">True</div></div><div class="fieldgroupwarning"><div class="fieldnamewarning">GraphicsApi</div><div class="fieldvaluewarning"><table class="warningtable"><tr><th>Value</th><th>Result File</th><th>Path</th></tr><tr><td class="targetvalue" title="Configuration used for comparison">OpenGLES3</td><td class="targetvalue">2019.3_Perf_Android_BuiltInRP_OpenGLES3_Linear_Mono.xml</td><td class="targetvalue">D:\PerfResults\dev</td></tr><tr><td  title="Mismatched configuration">Vulkan</td><td >2019.3_Perf_Android_BuiltInRP_Vulkan_Linear_Mono.xml</td><td >D:\PerfResults\dev</td></tr></table></div></div><div class="fieldgroup"><div class="fieldname">StereoRenderingPath</div><div class="fieldvalue">MultiPass</div></div><div class="fieldgroup"><div class="fieldname">RenderThreadingMode</div><div class="fieldvalue">MultiThreaded</div></div>
+</pre></div>
+<div><hr/></div><div class="typename">ScreenSettings</div><div><hr/></div>
+<div class="systeminfo"><pre>
+<div class="fieldgroup"><div class="fieldname">ScreenWidth</div><div class="fieldvalue">1920</div></div><div class="fieldgroup"><div class="fieldname">ScreenHeight</div><div class="fieldvalue">1080</div></div><div class="fieldgroup"><div class="fieldname">ScreenRefreshRate</div><div class="fieldvalue">60</div></div><div class="fieldgroup"><div class="fieldname">Fullscreen</div><div class="fieldvalue">True</div></div>
+</pre></div>
+<div><hr/></div><div class="typename">QualitySettings</div><div><hr/></div>
+<div class="systeminfo"><pre>
+<div class="fieldgroup"><div class="fieldname">Vsync</div><div class="fieldvalue">1</div></div><div class="fieldgroup"><div class="fieldname">AntiAliasing</div><div class="fieldvalue">4</div></div><div class="fieldgroup"><div class="fieldname">ColorSpace</div><div class="fieldvalue">Linear</div></div><div class="fieldgroup"><div class="fieldname">AnisotropicFiltering</div><div class="fieldvalue">Enable</div></div><div class="fieldgroup"><div class="fieldname">BlendWeights</div><div class="fieldvalue">TwoBones</div></div>
+</pre></div>
+<div><hr/></div><div class="typename">BuildSettings</div><div><hr/></div>
+<div class="systeminfo"><pre>
+<div class="fieldgroup"><div class="fieldname">Platform</div><div class="fieldvalue">Android</div></div><div class="fieldgroup"><div class="fieldname">BuildTarget</div><div class="fieldvalue">Android</div></div><div class="fieldgroup"><div class="fieldname">AndroidBuildSystem</div><div class="fieldvalue">Gradle</div></div>
+</pre></div>
+<div><hr/></div><div class="typename">EditorVersion</div><div><hr/></div>
+<div class="systeminfo"><pre>
+<div class="fieldgroup"><div class="fieldname">FullVersion</div><div class="fieldvalue">2019.3.0f6 (27ab2135bccf)</div></div><div class="fieldgroup"><div class="fieldname">Branch</div><div class="fieldvalue">2019.3/staging</div></div>
+</pre></div>
+</div></div>
+</td></tr>
+</table><table class="statMethodTable">
+<tr><td><div class="showedfailedtests">
+<label id="hidefailed" class="disabledContainerLabel">Show failed tests only
+<span class="tooltiptext">No failed tests to show because there are no baseline results.</span>
+<input type="checkbox" disabled>
+<span class="checkmark"></span></label></div></td></tr>
+</table>
+<table class="visualizationTable">
+<tr class="nofailures">
+<td class="testnamecell"><div class="testname nofailures"><p><h5>Metric:</h5></p><p><h3>FrameTime</h3></p></div></td></tr>
+<tr class="nofailures"><td></td></tr>
+<tr class="nofailures"><td class="chartcell nofailures"><div id="container" class="container nofailures">
+<canvas class="nofailures canvas" id="OculusStatsTests_StatsTest_EmptyScene_FrameTime"></canvas>
+</div></td></tr>
+<tr class="nofailures">
+<td class="testnamecell"><div class="testname nofailures"><p><h5>Test Name:</h5></p><p><h3>OculusStatsTests_StatsTest_SimpleSceneWithLitCube</h3></p></div></td></tr>
+<tr class="nofailures"><td></td></tr>
+<tr class="nofailures"><td class="chartcell nofailures"><div id="container" class="container nofailures">
+<canvas class="nofailures canvas" id="OculusStatsTests_StatsTest_SimpleSceneWithLitCube_FrameTime"></canvas>
+</div></td></tr>
+<tr class="nofailures">
+<td class="testnamecell"><div class="testname nofailures"><p><h5>Test Name:</h5></p><p><h3>OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes</h3></p></div></td></tr>
+<tr class="nofailures"><td></td></tr>
+<tr class="nofailures"><td class="chartcell nofailures"><div id="container" class="container nofailures">
+<canvas class="nofailures canvas" id="OculusStatsTests_StatsTest_SimpleSceneWithManyLitCubes_FrameTime"></canvas>
+</div></td></tr>
+</table>
+</body>
+</html>
