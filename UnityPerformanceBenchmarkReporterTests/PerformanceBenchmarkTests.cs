@@ -49,11 +49,56 @@ namespace UnityPerformanceBenchmarkReporterTests
         }
 
         [Test]
+        public void Verify_AddPerformanceTestRunResultsV2()
+        {
+            // Arrange
+            var resultXmlFilePath = EnsureFullPath("results_v2.xml");
+            var args = new[] { string.Format("--testresultsxmlsource={0}", resultXmlFilePath) };
+            optionsParser.ParseOptions(PerformanceBenchmark, args);
+
+            // Act
+            PerformanceBenchmark.AddPerformanceTestRunResults(testResultXmlParser, performanceTestRunResults, testResults, new List<TestResult>());
+
+            // Assert
+            Assert.IsTrue(PerformanceBenchmark.ResultFilesExist);
+            AssertCorrectResultXmlFilePaths(new[] { resultXmlFilePath });
+            Assert.NotNull(testResults);
+            Assert.IsTrue(testResults.Count > 0);
+            Assert.NotNull(performanceTestRunResults);
+            Assert.IsTrue(performanceTestRunResults.Count > 0);
+        }
+
+        [Test]
         public void Verify_AddPerformanceTestRunResults_TwoResultFiles()
         {
             // Arrange
             var resultXmlFilePath = EnsureFullPath("results.xml");
             var resultFileName2 = EnsureFullPath("results2.xml");
+            var args = new[]
+            {
+                string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
+                string.Format("--testresultsxmlsource={0}", resultFileName2)
+            };
+            optionsParser.ParseOptions(PerformanceBenchmark, args);
+
+            // Act
+            PerformanceBenchmark.AddPerformanceTestRunResults(testResultXmlParser, performanceTestRunResults, testResults, new List<TestResult>());
+
+            // Assert
+            Assert.IsTrue(PerformanceBenchmark.ResultFilesExist);
+            AssertCorrectResultXmlFilePaths(new[] { resultXmlFilePath, resultFileName2 });
+            Assert.NotNull(testResults);
+            Assert.IsTrue(testResults.Count > 0);
+            Assert.NotNull(performanceTestRunResults);
+            Assert.IsTrue(performanceTestRunResults.Count > 0);
+        }
+
+        [Test]
+        public void Verify_AddPerformanceTestRunResults_OneV1ResultFiles_OneV2ResultFiles()
+        {
+            // Arrange
+            var resultXmlFilePath = EnsureFullPath("results.xml");
+            var resultFileName2 = EnsureFullPath("results_v2.xml");
             var args = new[]
             {
                 string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
@@ -81,8 +126,8 @@ namespace UnityPerformanceBenchmarkReporterTests
             var resultsXmlDir = EnsureFullPath("Results");
             var args = new[]
             {
-                    string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
-                    string.Format("--testresultsxmlsource={0}", resultsXmlDir)
+                string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
+                string.Format("--testresultsxmlsource={0}", resultsXmlDir)
             };
             optionsParser.ParseOptions(PerformanceBenchmark, args);
 
@@ -126,11 +171,11 @@ namespace UnityPerformanceBenchmarkReporterTests
         }
 
         [Test]
-        public void Verify_AddBaselinePerformanceTestRunResultsDirectory()
+        public void Verify_AddBaselinePerformanceTestRunResults_V2BaselineFile()
         {
             // Arrange
             var resultXmlFilePath = EnsureFullPath("results.xml");
-            var baselineXmlFilePath = EnsureFullPath("baseline.xml");
+            var baselineXmlFilePath = EnsureFullPath("baseline_v2.xml");
             var args = new[]
             {
                 string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
@@ -143,6 +188,34 @@ namespace UnityPerformanceBenchmarkReporterTests
 
             // Assert
             Assert.IsTrue(PerformanceBenchmark.BaselineResultFilesExist);
+            AssertCorrectBaselineXmlFilePaths(new[] { baselineXmlFilePath });
+            AssertCorrectResultXmlFilePaths(new[] { resultXmlFilePath });
+            Assert.NotNull(baselineTestResults);
+            Assert.IsTrue(baselineTestResults.Count > 0);
+            Assert.NotNull(baselinePerformanceTestRunResults);
+            Assert.IsTrue(baselinePerformanceTestRunResults.Count > 0);
+        }
+
+        [Test]
+        public void Verify_AddBaselinePerformanceTestRunResultsDirectory()
+        {
+            // Arrange
+            var resultsXmlDir = EnsureFullPath("Results");
+            var baselineXmlFilePath = EnsureFullPath("baseline.xml");
+            var args = new[]
+            {
+                string.Format("--testresultsxmlsource={0}", resultsXmlDir),
+                string.Format("--baselinexmlsource={0}", baselineXmlFilePath)
+            };
+            optionsParser.ParseOptions(PerformanceBenchmark, args);
+
+            // Act
+            PerformanceBenchmark.AddBaselinePerformanceTestRunResults(testResultXmlParser, baselinePerformanceTestRunResults, baselineTestResults);
+
+            // Assert
+            Assert.IsTrue(PerformanceBenchmark.BaselineResultFilesExist);
+            AssertCorrectBaselineXmlFilePaths(new[] { baselineXmlFilePath });
+            AssertCorrectResultsXmlDirectoryPaths(new[] { resultsXmlDir });
             Assert.NotNull(baselineTestResults);
             Assert.IsTrue(baselineTestResults.Count > 0);
             Assert.NotNull(baselinePerformanceTestRunResults);
@@ -157,9 +230,9 @@ namespace UnityPerformanceBenchmarkReporterTests
             var baselineXmlFilePath = EnsureFullPath("baseline.xml");
             var args = new[]
             {
-                    string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
-                    string.Format("--baselinexmlsource={0}", baselineXmlFilePath)
-                };
+                string.Format("--testresultsxmlsource={0}", resultXmlFilePath),
+                string.Format("--baselinexmlsource={0}", baselineXmlFilePath)
+            };
             optionsParser.ParseOptions(PerformanceBenchmark, args);
 
             // Act
