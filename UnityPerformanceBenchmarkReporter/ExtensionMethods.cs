@@ -1,35 +1,29 @@
-﻿using System;
+using System;
 using System.Globalization;
 
 namespace UnityPerformanceBenchmarkReporter
 {
     public static class ExtensionMethods
     {
-        public static double TruncToSigFig(this double d, uint digits)
+        public static double TruncToSigFig(this double value, uint digits)
         {
-            double truncated;
-            
-            if(d == 0)
+            if (value == 0)
             {
-                truncated = 0;
-            }
-            else
-            {
-                var s = Convert.ToString(d, CultureInfo.InvariantCulture);
-                var parts = s.Split('.');
-                if (parts.Length <= 1 || parts[1].Length <= digits)
-                {
-                    truncated = d;
-                }
-                else
-                {
-                    var newSigDigits = parts[1].Substring(0, (int) digits);
-                    var truncString = string.Format("{0}.{1}", parts[0], newSigDigits);
-                    truncated = Convert.ToDouble(truncString);
-                }
+                return 0;
             }
 
-            return truncated;
+            var valueStr = Convert.ToString(value, CultureInfo.InvariantCulture);
+            var parts = valueStr.Split('.');
+            if (parts.Length <= 1 || parts[1].Length <= digits)
+            {
+                return value;
+            }
+
+            var truncString = digits == 0
+                ? parts[0]
+                : $"{parts[0]}.{parts[1][..(int) digits]}";
+
+            return Convert.ToDouble(truncString, CultureInfo.InvariantCulture);
         }
     }
 }
