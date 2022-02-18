@@ -41,7 +41,7 @@ namespace UnityPerformanceBenchmarkReporter
                     ShowHelp(string.Empty, os);
                 }
 
-                if (!performanceBenchmark.ResultXmlFilePaths.Any() && !performanceBenchmark.ResultXmlDirectoryPaths.Any())
+                if (!performanceBenchmark.ResultFilePaths.Any() && !performanceBenchmark.ResultDirectoryPaths.Any())
                 {
                     ShowHelp("Missing required option --results=(filePath|directoryPath)", os);
                 }
@@ -62,13 +62,14 @@ namespace UnityPerformanceBenchmarkReporter
         {
             var optionsSet = new OptionSet();
                 optionsSet.Add("?|help|h", "Prints out the options.", option => help = option != null);
+                optionsSet.Add("fileformat|", "Sets Expected File Format for Results and Baseline Files. If no arg is provided we assume the format is XML", filtype => performanceBenchmark.SetFileType(filtype));
                 optionsSet.Add(
                         "results|testresultsxmlsource=", 
                         "REQUIRED - Path to a test result XML filename OR directory. Directories are searched resursively. You can repeat this option with multiple result file or directory paths.",
-                    xmlsource => performanceBenchmark.AddXmlSourcePath(xmlsource, "results", ResultType.Test));
+                    xmlsource => performanceBenchmark.AddSourcePath(xmlsource, "results", ResultType.Test));
                 optionsSet.Add(
                         "baseline|baselinexmlsource:", "OPTIONAL - Path to a baseline XML filename.",
-                        xmlsource => performanceBenchmark.AddXmlSourcePath(xmlsource, "baseline", ResultType.Baseline));
+                        xmlsource => performanceBenchmark.AddSourcePath(xmlsource, "baseline", ResultType.Baseline));
                 optionsSet.Add(
                         "report|reportdirpath:", "OPTIONAL - Path to where the report will be written. Default is current working directory.",
                         performanceBenchmark.AddReportDirPath);

@@ -46,37 +46,47 @@ namespace UnityPerformanceBenchmarkReporter
             var optionsParser = new OptionsParser();
 
             optionsParser.ParseOptions(performanceBenchmark, args);
-            var testResultXmlParser = new TestResultXmlParser();
+
+            IParser testResultParser = null;
+
+            if (performanceBenchmark.FileType == ESupportedFileTypes.json)
+            {
+                testResultParser =  new TestResultJsonParser();
+            }
+            else if (performanceBenchmark.FileType == ESupportedFileTypes.xml)
+            {
+                  testResultParser =  new TestResultXmlParser();
+            }
 
             if (performanceBenchmark.BaselineResultFilesExist)
-            {
-                performanceBenchmark.AddBaselinePerformanceTestRunResults(testResultXmlParser, baselinePerformanceTestRunResults, baselineTestResults);
-
-                if (baselinePerformanceTestRunResults.Any())
                 {
-                    aggregateTestRunResults.AddRange(baselinePerformanceTestRunResults);
-                }
-                else
-                {
-                    Environment.Exit(1);
-                }
-            }
+                    performanceBenchmark.AddBaselinePerformanceTestRunResults(testResultParser, baselinePerformanceTestRunResults, baselineTestResults);
 
-            if (performanceBenchmark.ResultFilesExist)
-            {
-                performanceBenchmark.AddPerformanceTestRunResults(testResultXmlParser, performanceTestRunResults, testResults, baselineTestResults);
-
-                if (performanceTestRunResults.Any())
-                {
-                    aggregateTestRunResults.AddRange(performanceTestRunResults);
+                    if (baselinePerformanceTestRunResults.Any())
+                    {
+                        aggregateTestRunResults.AddRange(baselinePerformanceTestRunResults);
+                    }
+                    else
+                    {
+                        Environment.Exit(1);
+                    }
                 }
-                else
-                {
-                    Environment.Exit(1);
-                }
-            }
 
-            var performanceTestResults = new PerformanceTestRunResult[0]; 
+                if (performanceBenchmark.ResultFilesExist)
+                {
+                    performanceBenchmark.AddPerformanceTestRunResults(testResultParser, performanceTestRunResults, testResults, baselineTestResults);
+
+                    if (performanceTestRunResults.Any())
+                    {
+                        aggregateTestRunResults.AddRange(performanceTestRunResults);
+                    }
+                    else
+                    {
+                        Environment.Exit(1);
+                    }
+                }
+
+            var performanceTestResults = new PerformanceTestRunResult[0];
 
             // If we have a baseline
             if (aggregateTestRunResults.Any(a => a.IsBaseline))
@@ -113,7 +123,7 @@ namespace UnityPerformanceBenchmarkReporter
         private static int WriteFailedTestsAndMetricsToConsole(PerformanceTestRunResult[] performanceTestResults, PerformanceBenchmark performanceBenchmark)
         {
             var failedTestsExist = performanceTestResults.SelectMany(ptr => ptr.TestResults)
-                .Any(tr => tr.State == (int) TestState.Failure);
+                .Any(tr => tr.State == (int)TestState.Failure);
             if (failedTestsExist)
             {
                 WriteLine("FAILURE: One ore more performance test metric aggregations is out of threshold from the baseline value.");
@@ -147,7 +157,6 @@ namespace UnityPerformanceBenchmarkReporter
                     }
                 }
             }
-            
             return performanceBenchmark.FailOnBaseline && failedTestsExist ? 1 : 0;
         }
 
