@@ -10,7 +10,7 @@ using UnityPerformanceBenchmarkReporter.Entities.New;
 
 namespace UnityPerformanceBenchmarkReporter
 {
-    public class TestResultXmlParser
+    public class TestResultXmlParser : IParser
     {
         public PerformanceTestRun Parse(string path)
         {
@@ -178,7 +178,7 @@ namespace UnityPerformanceBenchmarkReporter
                         ScreenWidth = result.Player.ScreenWidth,
                         ScreenRefreshRate = result.Player.ScreenRefreshRate
                     },
-                    PlayerSystemInfo = new PlayerSystemInfo()
+                    PlayerSystemInfo = new Entities.PlayerSystemInfo()
                     {
                         DeviceModel = result.Hardware.DeviceModel,
                         DeviceName = result.Hardware.DeviceName,
