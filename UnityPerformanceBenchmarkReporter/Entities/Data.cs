@@ -65,6 +65,9 @@ namespace UnityPerformanceBenchmarkReporter.Entities.New
         public int ProcessorCount;
         public string GraphicsDeviceName;
         public int SystemMemorySizeMB;
+
+        public string XrModel ;
+        public string XrDevice;
     }
 
     [Serializable]

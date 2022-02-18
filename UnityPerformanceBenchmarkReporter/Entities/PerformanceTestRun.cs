@@ -12,10 +12,25 @@ namespace UnityPerformanceBenchmarkReporter.Entities
         public ScreenSettings ScreenSettings;
         public QualitySettings QualitySettings;
         public PlayerSettings PlayerSettings;
+        public ProjectVersion ProjectVersion;
+
+        public string TestProject;
         public string TestSuite;
         public double StartTime;
         public double EndTime;
         public List<PerformanceTestResult> Results  = new List<PerformanceTestResult>();
+
+        public JobMetaData JobMetaData ;
+        public object Dependencies;
+    }
+
+    [Serializable]    
+        public class ProjectVersion
+    {
+        public string ProjectName { get; set; }
+        public string Branch { get; set; }
+        public string Changeset { get; set; }
+        public DateTime Date { get; set; }
     }
 
     [Serializable]
@@ -73,13 +88,12 @@ namespace UnityPerformanceBenchmarkReporter.Entities
     public class PlayerSettings
     {
         public string ScriptingBackend;
-        public string ScriptingRuntimeVersion;
         public bool VrSupported;
         public bool MtRendering;
         public bool GraphicsJobs;
         public bool GpuSkinning;
         public string GraphicsApi;
-        //public string Batchmode; TODO
+        public string Batchmode; 
         //public int StaticBatching; TODO
         //public int DynamicBatching; TODO
         public string StereoRenderingPath;
@@ -87,5 +101,27 @@ namespace UnityPerformanceBenchmarkReporter.Entities
         public string AndroidMinimumSdkVersion;
         public string AndroidTargetSdkVersion;
         public List<string> EnabledXrTargets;
+
+        public string ScriptingRuntimeVersion;
+    }
+    
+
+    [Serializable]
+     public class Yamato
+    {
+        public string JobFriendlyName { get; set; }
+        public string JobName { get; set; }
+        public string JobId { get; set; }
+        public string ProjectId { get; set; }
+        public string ProjectName { get; set; }
+        public object WorkDir { get; set; }
+        public object JobOwnerEmail { get; set; }
+    }
+
+    [Serializable]
+    public class JobMetaData
+    {
+        public Yamato Yamato { get; set; }
+        public object Bokken { get; set; }
     }
 }

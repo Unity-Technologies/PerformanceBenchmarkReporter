@@ -28,6 +28,8 @@ namespace UnityPerformanceBenchmarkReporter.Entities
         public double Threshold;
         public bool IncreaseIsBetter;
         public double Percentile;
+
+        public bool FailOnBaseline;
     }
 
     public enum AggregationType
