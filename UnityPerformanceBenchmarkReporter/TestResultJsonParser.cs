@@ -21,7 +21,10 @@ namespace UnityPerformanceBenchmarkReporter
                 {
                     string stream = reader.ReadToEnd();
                     // json wrawrapped in invalid [], removed for valid json format 
-                    report = stream.Substring(1, stream.Length - 2);
+                    if(stream[0] == '[' && stream[stream.Length - 1] == ']' )
+                        report = stream.Substring(1, stream.Length - 2);
+                    else            
+                        report = stream;
                 }
             }
             catch (System.Exception)
@@ -35,6 +38,7 @@ namespace UnityPerformanceBenchmarkReporter
 
         private static PerformanceTestRun ParseJson(string json)
         {
+            
             PerformanceTestRun result;
             try
             {

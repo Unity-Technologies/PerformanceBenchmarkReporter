@@ -97,7 +97,7 @@ namespace UnityPerformanceBenchmarkReporter
         private Dictionary<string, List<SampleGroup>> MergeTestExecutions(PerformanceTestRun performanceTestRun)
         {
             var mergedTestExecutions = new Dictionary<string, List<SampleGroup>>();
-            var testNames = performanceTestRun.Results.Select(te => te.TestName).Distinct().ToList();
+            var testNames = performanceTestRun.Results.Select(te => te.TestName).Where(t => !String.IsNullOrEmpty(t)).Distinct().ToList();
             foreach (var testName in testNames)
             {
                 var executions = performanceTestRun.Results.Where(te => te.TestName == testName);

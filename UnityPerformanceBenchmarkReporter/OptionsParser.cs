@@ -62,7 +62,7 @@ namespace UnityPerformanceBenchmarkReporter
         {
             var optionsSet = new OptionSet();
                 optionsSet.Add("?|help|h", "Prints out the options.", option => help = option != null);
-                optionsSet.Add("fileformat|", "Sets Expected File Format for Results and Baseline Files. If no arg is provided we assume the format is XML", filtype => performanceBenchmark.SetFileType(filtype));
+                optionsSet.Add("fileformat|format=", "Sets Expected File Format for Results and Baseline Files. If no arg is provided we assume the format is XML", filtype => performanceBenchmark.SetFileType(filtype));
                 optionsSet.Add(
                         "results|testresultsxmlsource=", 
                         "REQUIRED - Path to a test result XML filename OR directory. Directories are searched resursively. You can repeat this option with multiple result file or directory paths.",

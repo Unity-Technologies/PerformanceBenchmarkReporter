@@ -36,7 +36,6 @@ namespace UnityPerformanceBenchmarkReporter
 
         public bool ResultFilesExist => ResultFilePaths.Any() || ResultDirectoryPaths.Any();
 
-        
 
         public void AddPerformanceTestRunResults(
             IParser testResultParser,
@@ -134,6 +133,14 @@ namespace UnityPerformanceBenchmarkReporter
         {
             if (String.IsNullOrEmpty(filetype))
                 return;
+
+            if (Enum.TryParse<ESupportedFileTypes>(filetype, true, out ESupportedFileTypes result))
+            {
+                fileExtension = result;
+            }else
+            {
+                System.Console.WriteLine($"Failed to Parse FileType Parameter {filetype}");
+            }
         }
 
         private IEnumerable<string> GetAllFileNames(string directory)
@@ -146,6 +153,8 @@ namespace UnityPerformanceBenchmarkReporter
 
         public void AddSourcePath(string sourcePath, string optionName, OptionsParser.ResultType resultType)
         {
+            System.Console.WriteLine($" Adding Source Path : {sourcePath}");
+
             if (string.IsNullOrEmpty(sourcePath))
             {
                 throw new ArgumentNullException(sourcePath);
