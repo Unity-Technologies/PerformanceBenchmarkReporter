@@ -12,7 +12,7 @@ namespace UnityPerformanceBenchmarkReporterTests
         private TestResultXmlParser testResultXmlParser;
         private List<PerformanceTestRunResult> performanceTestRunResults;
         private List<TestResult> testResults;
-        private List<PerformanceTestRunResult>  baselinePerformanceTestRunResults;
+        private List<PerformanceTestRunResult> baselinePerformanceTestRunResults;
         private List<TestResult> baselineTestResults;
 
         [SetUp]
@@ -186,17 +186,17 @@ namespace UnityPerformanceBenchmarkReporterTests
         {
             foreach (var baselineXmlFilePath in baselineXmlFilePaths)
             {
-                Assert.IsFalse(PerformanceBenchmark.ResultXmlFilePaths.Any(f => f.Equals(baselineXmlFilePath)));
-                Assert.IsTrue(PerformanceBenchmark.BaselineXmlFilePaths.Any(f => f.Equals(baselineXmlFilePath)));
+                Assert.IsFalse(PerformanceBenchmark.ResultFilePaths.Any(f => f.Equals(baselineXmlFilePath)));
+                Assert.IsTrue(PerformanceBenchmark.BaselineFilePaths.Any(f => f.Equals(baselineXmlFilePath)));
             }
         }
-        
+
         private void AssertCorrectResultXmlFilePaths(string[] resultFileNames)
         {
             foreach (var resultXmlFilePath in resultFileNames)
             {
-                Assert.IsTrue(PerformanceBenchmark.ResultXmlFilePaths.Contains(resultXmlFilePath));
-                Assert.IsFalse(PerformanceBenchmark.BaselineXmlFilePaths.Contains(resultXmlFilePath));
+                Assert.IsTrue(PerformanceBenchmark.ResultFilePaths.Contains(resultXmlFilePath));
+                Assert.IsFalse(PerformanceBenchmark.BaselineFilePaths.Contains(resultXmlFilePath));
             }
         }
 
@@ -204,7 +204,7 @@ namespace UnityPerformanceBenchmarkReporterTests
         {
             foreach (var resultXmlDirPath in resultsXmlDirPaths)
             {
-                Assert.IsTrue(PerformanceBenchmark.ResultXmlDirectoryPaths.Contains(resultXmlDirPath));
+                Assert.IsTrue(PerformanceBenchmark.ResultDirectoryPaths.Contains(resultXmlDirPath));
             }
         }
     }
