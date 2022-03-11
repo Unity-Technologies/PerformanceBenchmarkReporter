@@ -51,40 +51,40 @@ namespace UnityPerformanceBenchmarkReporter
 
             if (performanceBenchmark.FileType == ESupportedFileTypes.json)
             {
-                testResultParser =  new TestResultJsonParser();
+                testResultParser = new TestResultJsonParser();
             }
             else if (performanceBenchmark.FileType == ESupportedFileTypes.xml)
             {
-                  testResultParser =  new TestResultXmlParser();
+                testResultParser = new TestResultXmlParser();
             }
 
             if (performanceBenchmark.BaselineResultFilesExist)
+            {
+                performanceBenchmark.AddBaselinePerformanceTestRunResults(testResultParser, baselinePerformanceTestRunResults, baselineTestResults);
+
+                if (baselinePerformanceTestRunResults.Any())
                 {
-                    performanceBenchmark.AddBaselinePerformanceTestRunResults(testResultParser, baselinePerformanceTestRunResults, baselineTestResults);
-
-                    if (baselinePerformanceTestRunResults.Any())
-                    {
-                        aggregateTestRunResults.AddRange(baselinePerformanceTestRunResults);
-                    }
-                    else
-                    {
-                        Environment.Exit(1);
-                    }
+                    aggregateTestRunResults.AddRange(baselinePerformanceTestRunResults);
                 }
-
-                if (performanceBenchmark.ResultFilesExist)
+                else
                 {
-                    performanceBenchmark.AddPerformanceTestRunResults(testResultParser, performanceTestRunResults, testResults, baselineTestResults);
-
-                    if (performanceTestRunResults.Any())
-                    {
-                        aggregateTestRunResults.AddRange(performanceTestRunResults);
-                    }
-                    else
-                    {
-                        Environment.Exit(1);
-                    }
+                    Environment.Exit(1);
                 }
+            }
+
+            if (performanceBenchmark.ResultFilesExist)
+            {
+                performanceBenchmark.AddPerformanceTestRunResults(testResultParser, performanceTestRunResults, testResults, baselineTestResults);
+
+                if (performanceTestRunResults.Any())
+                {
+                    aggregateTestRunResults.AddRange(performanceTestRunResults);
+                }
+                else
+                {
+                    Environment.Exit(1);
+                }
+            }
 
             var performanceTestResults = new PerformanceTestRunResult[0];
 
@@ -117,7 +117,9 @@ namespace UnityPerformanceBenchmarkReporter
                 performanceBenchmark.ReportDirPath,
                 performanceBenchmark.BaselineResultFilesExist);
 
-            return WriteFailedTestsAndMetricsToConsole(performanceTestResults, performanceBenchmark);
+            int result = WriteFailedTestsAndMetricsToConsole(performanceTestResults, performanceBenchmark);
+            WriteLine($"Finished with Result {result}");
+            return result;
         }
 
         private static int WriteFailedTestsAndMetricsToConsole(PerformanceTestRunResult[] performanceTestResults, PerformanceBenchmark performanceBenchmark)

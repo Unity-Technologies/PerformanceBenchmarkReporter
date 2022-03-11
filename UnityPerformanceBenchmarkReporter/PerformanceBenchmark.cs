@@ -137,7 +137,8 @@ namespace UnityPerformanceBenchmarkReporter
             if (Enum.TryParse<ESupportedFileTypes>(filetype, true, out ESupportedFileTypes result))
             {
                 fileExtension = result;
-            }else
+            }
+            else
             {
                 System.Console.WriteLine($"Failed to Parse FileType Parameter {filetype}");
             }
@@ -154,6 +155,7 @@ namespace UnityPerformanceBenchmarkReporter
         public void AddSourcePath(string sourcePath, string optionName, OptionsParser.ResultType resultType)
         {
             System.Console.WriteLine($" Adding Source Path : {sourcePath}");
+            System.Console.WriteLine($"");
 
             if (string.IsNullOrEmpty(sourcePath))
             {

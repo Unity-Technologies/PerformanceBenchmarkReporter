@@ -19,26 +19,27 @@ namespace UnityPerformanceBenchmarkReporter
             {
                 using (StreamReader reader = new StreamReader(path))
                 {
-                    string stream = reader.ReadToEnd();
+                    string stream = reader.ReadToEnd().Trim();
+
                     // json wrawrapped in invalid [], removed for valid json format 
-                    if(stream[0] == '[' && stream[stream.Length - 1] == ']' )
+                    if (stream[0] == '[' && stream[stream.Length - 1] == ']')
                         report = stream.Substring(1, stream.Length - 2);
-                    else            
+                    else
                         report = stream;
                 }
             }
             catch (System.Exception)
             {
-                
+
                 throw;
             }
-            
+
             return ParseJson(report);
         }
 
         private static PerformanceTestRun ParseJson(string json)
         {
-            
+
             PerformanceTestRun result;
             try
             {
@@ -46,11 +47,11 @@ namespace UnityPerformanceBenchmarkReporter
             }
             catch (System.Exception)
             {
-                
+
                 throw;
             }
-            
-                    
+
+
             return result;
         }
 
