@@ -12,7 +12,7 @@ namespace UnityPerformanceBenchmarkReporter
 {
     public class TestResultXmlParser : IParser
     {
-        public PerformanceTestRun Parse(string path)
+        public PerformanceTestRun Parse(string path,int version)
         {
             var xmlDocument = XDocument.Load(path);
             return Parse(xmlDocument);

@@ -14,6 +14,8 @@ namespace UnityPerformanceBenchmarkReporter
         public readonly TestRunMetadataProcessor TestRunMetadataProcessor;
         private ESupportedFileTypes fileExtension = ESupportedFileTypes.xml;
         public ESupportedFileTypes FileType { get { return fileExtension; } }
+
+        public int DataVersion { get; private set; } = 2;
         public PerformanceBenchmark(Dictionary<Type, string[]> configFieldNames = null)
         {
             // Default significant figures to use for non-integer metrics if user doesn't specify another value.
@@ -84,7 +86,7 @@ namespace UnityPerformanceBenchmarkReporter
 
                 foreach (var fileNamePath in fileNamePaths)
                 {
-                    var performanceTestRun = testResultParser.Parse(fileNamePath);
+                    var performanceTestRun = testResultParser.Parse(fileNamePath,DataVersion);
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
                         perfTestRuns.Add(
@@ -98,7 +100,7 @@ namespace UnityPerformanceBenchmarkReporter
                 for (var i = 0; i < resultFilesOrderedByResultName.Length; i++)
                 {
                     var performanceTestRun =
-                        testResultParser.Parse(resultFilesOrderedByResultName[i].Key);
+                        testResultParser.Parse(resultFilesOrderedByResultName[i].Key,DataVersion);
 
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
@@ -129,7 +131,16 @@ namespace UnityPerformanceBenchmarkReporter
             }
         }
 
-        internal void SetFileType(string filetype)
+        public void SetDataVersion(string version)
+        {
+            if(int.TryParse(version,out int result)){
+                DataVersion = result;
+            }else{
+                throw new ArgumentException($"{version} is not a valid data format version");
+            }
+        }
+
+        public void SetFileType(string filetype)
         {
             if (String.IsNullOrEmpty(filetype))
                 return;
@@ -140,7 +151,7 @@ namespace UnityPerformanceBenchmarkReporter
             }
             else
             {
-                System.Console.WriteLine($"Failed to Parse FileType Parameter {filetype}");
+                throw new ArgumentException($"{filetype} is not a valid file format");
             }
         }
 

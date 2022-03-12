@@ -4,6 +4,6 @@ namespace UnityPerformanceBenchmarkReporter
 {
     public interface IParser
     {
-        public PerformanceTestRun Parse(string path);
+        public PerformanceTestRun Parse(string path,int version);
     }
 }
