@@ -134,7 +134,10 @@ namespace UnityPerformanceBenchmarkReporter
         public void SetDataVersion(string version)
         {
             if(int.TryParse(version,out int result)){
-                DataVersion = result;
+                if(result > 0 && result < 3)
+                    DataVersion = result;
+                else
+                throw new ArgumentException($"{version} is not a valid data format version. Please pass 1 or 2");
             }else{
                 throw new ArgumentException($"{version} is not a valid data format version");
             }
