@@ -6,10 +6,10 @@ using UnityPerformanceBenchmarkReporter.Entities;
 
 namespace UnityPerformanceBenchmarkReporterTests
 {
-    public class PerformanceBenchmarkTests : PerformanceBenchmarkTestsBase
+    public class PerformanceBenchmarkTestsXML : PerformanceBenchmarkTestsBase
     {
         private OptionsParser optionsParser;
-        private TestResultXmlParser testResultXmlParser;
+        private IParser testResultXmlParser;
         private List<PerformanceTestRunResult> performanceTestRunResults;
         private List<TestResult> testResults;
         private List<PerformanceTestRunResult> baselinePerformanceTestRunResults;
@@ -130,7 +130,7 @@ namespace UnityPerformanceBenchmarkReporterTests
         {
             // Arrange
             var resultXmlFilePath = EnsureFullPath("results.xml");
-            var baselineXmlFilePath = EnsureFullPath("baseline.xml");
+            var baselineXmlFilePath = EnsureFullPath("Baselines");
             var args = new[]
             {
                 string.Format("--testresultsxmlsource={0}", resultXmlFilePath),

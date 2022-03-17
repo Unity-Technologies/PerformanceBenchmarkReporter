@@ -86,7 +86,7 @@ namespace UnityPerformanceBenchmarkReporter
 
                 foreach (var fileNamePath in fileNamePaths)
                 {
-                    var performanceTestRun = testResultParser.Parse(fileNamePath,DataVersion);
+                    var performanceTestRun = testResultParser.Parse(fileNamePath, DataVersion);
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
                         perfTestRuns.Add(
@@ -100,7 +100,7 @@ namespace UnityPerformanceBenchmarkReporter
                 for (var i = 0; i < resultFilesOrderedByResultName.Length; i++)
                 {
                     var performanceTestRun =
-                        testResultParser.Parse(resultFilesOrderedByResultName[i].Key,DataVersion);
+                        testResultParser.Parse(resultFilesOrderedByResultName[i].Key, DataVersion);
 
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
@@ -133,12 +133,15 @@ namespace UnityPerformanceBenchmarkReporter
 
         public void SetDataVersion(string version)
         {
-            if(int.TryParse(version,out int result)){
-                if(result > 0 && result < 3)
+            if (int.TryParse(version, out int result))
+            {
+                if (result > 0 && result < 3)
                     DataVersion = result;
                 else
-                throw new ArgumentException($"{version} is not a valid data format version. Please pass 1 or 2");
-            }else{
+                    throw new ArgumentException($"{version} is not a valid data format version. Please pass 1 or 2");
+            }
+            else
+            {
                 throw new ArgumentException($"{version} is not a valid data format version");
             }
         }
@@ -211,7 +214,21 @@ namespace UnityPerformanceBenchmarkReporter
                     sourcePath, FileType));
             }
 
-            ResultDirectoryPaths.Add(sourcePath);
+            switch (resultType)
+            {
+                case OptionsParser.ResultType.Test:
+                    ResultDirectoryPaths.Add(sourcePath);
+                    break;
+                case OptionsParser.ResultType.Baseline:
+                    foreach (var filename in fileNames)
+                    {
+                        BaselineFilePaths.Add(filename);
+                    }
+
+                    break;
+                default:
+                    throw new InvalidEnumArgumentException(resultType.ToString());
+            }
         }
 
         private void ProcessAsFile(string sourcePath, string optionName, OptionsParser.ResultType resultType)
