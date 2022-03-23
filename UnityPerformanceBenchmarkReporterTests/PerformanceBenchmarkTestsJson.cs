@@ -32,8 +32,8 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV1_AddPerformanceTestRunResults()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results.Json");
-            var args = new[] { "--format=Json",string.Format("--testresultsxmlsource={0}", resultJsonFilePath), "--version=1" };
+            var resultJsonFilePath = EnsureFullPath("results.json");
+            var args = new[] { "--format=json", string.Format("--testresultsxmlsource={0}", resultJsonFilePath), "--version=1" };
             optionsParser.ParseOptions(PerformanceBenchmark, args);
 
             // Act
@@ -52,11 +52,11 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV1_AddPerformanceTestRunResults_TwoResultFiles()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results.Json");
-            var resultFileName2 = EnsureFullPath("results2.Json");
+            var resultJsonFilePath = EnsureFullPath("results.json");
+            var resultFileName2 = EnsureFullPath("results.json");
             var args = new[]
             {
-                "--format=Json",
+                "--format=json",
                 string.Format("--testresultsxmlsource={0}", resultJsonFilePath),
                 string.Format("--testresultsxmlsource={0}", resultFileName2)
                 , "--version=1"
@@ -79,11 +79,11 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV1_AddPerformanceTestRunResults_OneResultFiles_OneResultDirectory()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results.Json");
+            var resultJsonFilePath = EnsureFullPath("results.json");
             var resultsJsonDir = EnsureFullPath("ResultsJson");
             var args = new[]
             {
-                "--format=Json",
+                "--format=json",
                     string.Format("--testresultsxmlsource={0}", resultJsonFilePath),
                     string.Format("--testresultsxmlsource={0}", resultsJsonDir)
                     , "--version=1"
@@ -107,8 +107,8 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV1_AddBaselinePerformanceTestRunResults()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results.Json");
-            var baselineJsonFilePath = EnsureFullPath("baseline.Json");
+            var resultJsonFilePath = EnsureFullPath("results.json");
+            var baselineJsonFilePath = EnsureFullPath("baseline.json");
             var args = new[]
             {
                 "--format=Json",
@@ -161,8 +161,8 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV1_Verify_AddBaselineAndNonBaselinePerformanceTestRunResults()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results.Json");
-            var baselineJsonFilePath = EnsureFullPath("baseline.Json");
+            var resultJsonFilePath = EnsureFullPath("results.json");
+            var baselineJsonFilePath = EnsureFullPath("baseline.json");
             var args = new[]
             {
                 "--format=Json",
@@ -192,11 +192,11 @@ namespace UnityPerformanceBenchmarkReporterTests
             Assert.IsTrue(baselinePerformanceTestRunResults.Count > 0);
         }
 
-     public void VerifyV2_AddPerformanceTestRunResults()
+        public void VerifyV2_AddPerformanceTestRunResults()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("baseline2.Json");
-            var args = new[] { string.Format("--format=Json","--testresultsxmlsource={0}", resultJsonFilePath), "--version=2" };
+            var resultJsonFilePath = EnsureFullPath("baseline2.json");
+            var args = new[] { string.Format("--format=Json", "--testresultsxmlsource={0}", resultJsonFilePath), "--version=2" };
             optionsParser.ParseOptions(PerformanceBenchmark, args);
 
             // Act
@@ -215,8 +215,8 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV2_AddPerformanceTestRunResults_TwoResultFiles()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("ResultsJson2/results2.Json");
-            var resultFileName2 = EnsureFullPath("results2.Json");
+            var resultJsonFilePath = EnsureFullPath("ResultsJson2/results2.json");
+            var resultFileName2 = EnsureFullPath("results2.json");
             var args = new[]
             {
                 "--format=Json",
@@ -242,7 +242,7 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV2_AddPerformanceTestRunResults_OneResultFiles_OneResultDirectory()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results2.Json");
+            var resultJsonFilePath = EnsureFullPath("results2.json");
             var resultsJsonDir = EnsureFullPath("ResultsJson2");
             var args = new[]
             {
@@ -270,8 +270,8 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV2_AddBaselinePerformanceTestRunResults()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results2.Json");
-            var baselineJsonFilePath = EnsureFullPath("baseline2.Json");
+            var resultJsonFilePath = EnsureFullPath("results2.json");
+            var baselineJsonFilePath = EnsureFullPath("baseline2.json");
             var args = new[]
             {
                 "--format=Json",
@@ -298,8 +298,8 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV2_AddBaselinePerformanceTestRunResultsDirectory()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results2.Json");
-            var baselineJsonFilePath = EnsureFullPath("baseline2.Json");
+            var resultJsonFilePath = EnsureFullPath("results2.json");
+            var baselineJsonFilePath = EnsureFullPath("baseline2.json");
             var args = new[]
             {
                 "--format=Json",
@@ -324,8 +324,8 @@ namespace UnityPerformanceBenchmarkReporterTests
         public void VerifyV2_Verify_AddBaselineAndNonBaselinePerformanceTestRunResults()
         {
             // Arrange
-            var resultJsonFilePath = EnsureFullPath("results2.Json");
-            var baselineJsonFilePath = EnsureFullPath("baseline2.Json");
+            var resultJsonFilePath = EnsureFullPath("results2.json");
+            var baselineJsonFilePath = EnsureFullPath("baseline2.json");
             var args = new[]
             {
                 "--format=Json",
@@ -381,5 +381,5 @@ namespace UnityPerformanceBenchmarkReporterTests
             }
         }
     }
-    
+
 }

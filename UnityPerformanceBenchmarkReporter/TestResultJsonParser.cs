@@ -145,29 +145,29 @@ namespace UnityPerformanceBenchmarkReporter
                 foreach (var res in run.Results)
                 {
                     var pt = new PerformanceTestResult()
+                    {
+                        TestCategories = res.Categories,
+                        TestName = res.Name,
+                        TestVersion = res.Version,
+                        SampleGroups = res.SampleGroups.Select(sg => new Entities.SampleGroup
                         {
-                            TestCategories = res.Categories,
-                            TestName = res.Name,
-                            TestVersion = res.Version,
-                            SampleGroups = res.SampleGroups.Select(sg => new Entities.SampleGroup
+                            Samples = sg.Samples,
+                            Average = sg.Average,
+                            Max = sg.Max,
+                            Median = sg.Median,
+                            Min = sg.Min,
+                            Sum = sg.Sum,
+                            StandardDeviation = sg.StandardDeviation,
+                            SampleCount = sg.Samples.Count,
+                            Definition = new SampleGroupDefinition()
                             {
-                                Samples = sg.Samples,
-                                Average = sg.Average,
-                                Max = sg.Max,
-                                Median = sg.Median,
-                                Min = sg.Min,
-                                Sum = sg.Sum,
-                                StandardDeviation = sg.StandardDeviation,
-                                SampleCount = sg.Samples.Count,
-                                Definition = new SampleGroupDefinition()
-                                {
-                                    Name = sg.Name,
-                                    SampleUnit = (Entities.SampleUnit)sg.Unit,
-                                    IncreaseIsBetter = sg.IncreaseIsBetter
-                                }
-                            }).ToList()
-                        };
-                        testRun.Results.Add(pt);
+                                Name = sg.Name,
+                                SampleUnit = (Entities.SampleUnit)sg.Unit,
+                                IncreaseIsBetter = sg.IncreaseIsBetter
+                            }
+                        }).ToList()
+                    };
+                    testRun.Results.Add(pt);
                 }
 
                 return testRun;

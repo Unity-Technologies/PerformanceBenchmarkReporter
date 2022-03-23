@@ -12,6 +12,7 @@ namespace UnityPerformanceBenchmarkReporter.Entities
         public string AggregationType;
         public double Percentile;
         public bool Regressed;
+        public bool Progressed;
         public double Min;
         public double Max;
         public double Median;
