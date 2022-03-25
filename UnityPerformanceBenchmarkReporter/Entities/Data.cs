@@ -18,6 +18,7 @@ namespace UnityPerformanceBenchmarkReporter.Entities.New
         public string Name;
         public SampleUnit Unit;
         public bool IncreaseIsBetter;
+        public double Threshold = 0.15;
         public List<double> Samples = new List<double>();
         public double Min;
         public double Max;

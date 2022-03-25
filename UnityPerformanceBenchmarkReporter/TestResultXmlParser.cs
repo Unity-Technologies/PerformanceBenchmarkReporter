@@ -90,11 +90,13 @@ namespace UnityPerformanceBenchmarkReporter
                                 Sum = sg.Sum,
                                 StandardDeviation = sg.StandardDeviation,
                                 SampleCount = sg.Samples.Count,
+                                
                                 Definition = new SampleGroupDefinition()
                                 {
                                     Name = sg.Name,
                                     SampleUnit = (Entities.SampleUnit)sg.Unit,
-                                    IncreaseIsBetter = sg.IncreaseIsBetter
+                                    IncreaseIsBetter = sg.IncreaseIsBetter,
+                                    Threshold = sg.Threshold
                                 }
                             }).ToList()
                         };

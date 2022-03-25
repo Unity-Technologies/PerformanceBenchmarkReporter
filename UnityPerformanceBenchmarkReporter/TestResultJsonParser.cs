@@ -163,7 +163,8 @@ namespace UnityPerformanceBenchmarkReporter
                             {
                                 Name = sg.Name,
                                 SampleUnit = (Entities.SampleUnit)sg.Unit,
-                                IncreaseIsBetter = sg.IncreaseIsBetter
+                                IncreaseIsBetter = sg.IncreaseIsBetter,
+                                Threshold = sg.Threshold
                             }
                         }).ToList()
                     };

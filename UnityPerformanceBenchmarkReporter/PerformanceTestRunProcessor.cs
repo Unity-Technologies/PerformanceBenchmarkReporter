@@ -163,10 +163,8 @@ namespace UnityPerformanceBenchmarkReporter
         private MeasurementResult DeterminePerformanceResult(SampleGroupResult sampleGroup, uint sigFig)
         {
             var measurementResult = MeasurementResult.Neutral;
-            var positiveThresholdValue = sampleGroup.BaselineValue + sampleGroup.BaselineValue * sampleGroup.Threshold;
-            var negativeThresholdValue = sampleGroup.BaselineValue - sampleGroup.BaselineValue * sampleGroup.Threshold;
-            positiveThresholdValue += sampleGroup.StandardDeviation;
-            negativeThresholdValue -= sampleGroup.StandardDeviation;
+            var positiveThresholdValue = sampleGroup.BaselineValue + (sampleGroup.BaselineValue + sampleGroup.StandardDeviation) * sampleGroup.Threshold;
+            var negativeThresholdValue = sampleGroup.BaselineValue - (sampleGroup.BaselineValue + sampleGroup.StandardDeviation) * sampleGroup.Threshold;
 
             if (sampleGroup.IncreaseIsBetter)
             {
