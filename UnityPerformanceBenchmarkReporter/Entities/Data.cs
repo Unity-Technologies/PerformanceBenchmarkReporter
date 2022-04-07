@@ -18,6 +18,7 @@ namespace UnityPerformanceBenchmarkReporter.Entities.New
         public string Name;
         public SampleUnit Unit;
         public bool IncreaseIsBetter;
+        public double Threshold = 0.15;
         public List<double> Samples = new List<double>();
         public double Min;
         public double Max;
@@ -65,6 +66,9 @@ namespace UnityPerformanceBenchmarkReporter.Entities.New
         public int ProcessorCount;
         public string GraphicsDeviceName;
         public int SystemMemorySizeMB;
+
+        public string XrModel ;
+        public string XrDevice;
     }
 
     [Serializable]

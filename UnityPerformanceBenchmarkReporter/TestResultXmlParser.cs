@@ -10,9 +10,9 @@ using UnityPerformanceBenchmarkReporter.Entities.New;
 
 namespace UnityPerformanceBenchmarkReporter
 {
-    public class TestResultXmlParser
+    public class TestResultXmlParser : IParser
     {
-        public PerformanceTestRun Parse(string path)
+        public PerformanceTestRun Parse(string path,int version)
         {
             var xmlDocument = XDocument.Load(path);
             return Parse(xmlDocument);
@@ -90,11 +90,13 @@ namespace UnityPerformanceBenchmarkReporter
                                 Sum = sg.Sum,
                                 StandardDeviation = sg.StandardDeviation,
                                 SampleCount = sg.Samples.Count,
+                                
                                 Definition = new SampleGroupDefinition()
                                 {
                                     Name = sg.Name,
                                     SampleUnit = (Entities.SampleUnit)sg.Unit,
-                                    IncreaseIsBetter = sg.IncreaseIsBetter
+                                    IncreaseIsBetter = sg.IncreaseIsBetter,
+                                    Threshold = sg.Threshold
                                 }
                             }).ToList()
                         };
@@ -178,7 +180,7 @@ namespace UnityPerformanceBenchmarkReporter
                         ScreenWidth = result.Player.ScreenWidth,
                         ScreenRefreshRate = result.Player.ScreenRefreshRate
                     },
-                    PlayerSystemInfo = new PlayerSystemInfo()
+                    PlayerSystemInfo = new Entities.PlayerSystemInfo()
                     {
                         DeviceModel = result.Hardware.DeviceModel,
                         DeviceName = result.Hardware.DeviceName,

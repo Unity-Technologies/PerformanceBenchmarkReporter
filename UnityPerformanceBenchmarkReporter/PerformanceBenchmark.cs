@@ -12,8 +12,10 @@ namespace UnityPerformanceBenchmarkReporter
         private readonly PerformanceTestRunProcessor performanceTestRunProcessor = new PerformanceTestRunProcessor();
 
         public readonly TestRunMetadataProcessor TestRunMetadataProcessor;
-        private readonly string xmlFileExtension = ".xml";
+        private ESupportedFileTypes fileExtension = ESupportedFileTypes.xml;
+        public ESupportedFileTypes FileType { get { return fileExtension; } }
 
+        public int DataVersion { get; private set; } = 2;
         public PerformanceBenchmark(Dictionary<Type, string[]> configFieldNames = null)
         {
             // Default significant figures to use for non-integer metrics if user doesn't specify another value.
@@ -24,70 +26,71 @@ namespace UnityPerformanceBenchmarkReporter
             TestRunMetadataProcessor = new TestRunMetadataProcessor(configFieldNames);
         }
 
-        public HashSet<string> ResultXmlFilePaths { get; } = new HashSet<string>();
-        public HashSet<string> ResultXmlDirectoryPaths { get; } = new HashSet<string>();
-        public HashSet<string> BaselineXmlFilePaths { get; } = new HashSet<string>();
+        public HashSet<string> ResultFilePaths { get; } = new HashSet<string>();
+        public HashSet<string> ResultDirectoryPaths { get; } = new HashSet<string>();
+        public HashSet<string> BaselineFilePaths { get; } = new HashSet<string>();
         public uint SigFig { get; }
         public string ReportDirPath { get; private set; }
         public bool FailOnBaseline { get; set; }
 
 
-        public bool BaselineResultFilesExist => BaselineXmlFilePaths.Any();
+        public bool BaselineResultFilesExist => BaselineFilePaths.Any();
 
-        public bool ResultFilesExist => ResultXmlFilePaths.Any() || ResultXmlDirectoryPaths.Any();
+        public bool ResultFilesExist => ResultFilePaths.Any() || ResultDirectoryPaths.Any();
+
 
         public void AddPerformanceTestRunResults(
-            TestResultXmlParser testResultXmlParser,
+            IParser testResultParser,
             List<PerformanceTestRunResult> performanceTestRunResults,
             List<TestResult> testResults,
             List<TestResult> baselineTestResults)
         {
-            AddTestResults(testResultXmlParser, performanceTestRunResults, testResults, baselineTestResults,
-                ResultXmlDirectoryPaths, ResultXmlFilePaths);
+            AddTestResults(testResultParser, performanceTestRunResults, testResults, baselineTestResults,
+                ResultDirectoryPaths, ResultFilePaths);
         }
 
         public void AddBaselinePerformanceTestRunResults(
-            TestResultXmlParser testResultXmlParser,
+            IParser testResultParser,
             List<PerformanceTestRunResult> baselinePerformanceTestRunResults,
             List<TestResult> baselineTestResults)
         {
-            AddTestResults(testResultXmlParser, baselinePerformanceTestRunResults, baselineTestResults,
-                baselineTestResults, null, BaselineXmlFilePaths, true);
+            AddTestResults(testResultParser, baselinePerformanceTestRunResults, baselineTestResults,
+                baselineTestResults, null, BaselineFilePaths, true);
         }
 
         private void AddTestResults(
-            TestResultXmlParser testResultXmlParser,
+            IParser testResultParser,
             List<PerformanceTestRunResult> testRunResults,
             List<TestResult> testResults,
             List<TestResult> baselineTestResults,
-            HashSet<string> xmlDirectoryPaths,
-            HashSet<string> xmlFileNamePaths,
+            HashSet<string> directoryPaths,
+            HashSet<string> fileNamePaths,
             bool isBaseline = false)
         {
-            if (!isBaseline && xmlDirectoryPaths != null && xmlDirectoryPaths.Any())
+            if (!isBaseline && directoryPaths != null && directoryPaths.Any())
             {
-                foreach (var xmlDirectory in xmlDirectoryPaths)
+                foreach (var directory in directoryPaths)
                 {
-                    var xmlFileNames = GetAllXmlFileNames(xmlDirectory);
+                    var fileNames = GetAllFileNames(directory);
 
-                    foreach (var xmlFileName in xmlFileNames)
+                    foreach (var fileName in fileNames)
                     {
-                        xmlFileNamePaths.Add(xmlFileName);
+                        fileNamePaths.Add(fileName);
                     }
                 }
             }
 
-            if (xmlFileNamePaths.Any())
+            if (fileNamePaths.Any())
             {
                 var perfTestRuns = new List<KeyValuePair<string, PerformanceTestRun>>();
 
-                foreach (var xmlFileNamePath in xmlFileNamePaths)
+                foreach (var fileNamePath in fileNamePaths)
                 {
-                    var performanceTestRun = testResultXmlParser.Parse(xmlFileNamePath);
+                    var performanceTestRun = testResultParser.Parse(fileNamePath, DataVersion);
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
                         perfTestRuns.Add(
-                            new KeyValuePair<string, PerformanceTestRun>(xmlFileNamePath, performanceTestRun));
+                            new KeyValuePair<string, PerformanceTestRun>(fileNamePath, performanceTestRun));
                     }
                 }
 
@@ -97,7 +100,7 @@ namespace UnityPerformanceBenchmarkReporter
                 for (var i = 0; i < resultFilesOrderedByResultName.Length; i++)
                 {
                     var performanceTestRun =
-                        testResultXmlParser.Parse(resultFilesOrderedByResultName[i].Key);
+                        testResultParser.Parse(resultFilesOrderedByResultName[i].Key, DataVersion);
 
                     if (performanceTestRun != null && performanceTestRun.Results.Any())
                     {
@@ -128,19 +131,52 @@ namespace UnityPerformanceBenchmarkReporter
             }
         }
 
-        private IEnumerable<string> GetAllXmlFileNames(string xmlDirectory)
+        public void SetDataVersion(string version)
         {
-            var dir = new DirectoryInfo(xmlDirectory);
-            var xmlFileNames = dir.GetFiles("*" + xmlFileExtension, SearchOption.AllDirectories)
-                .Select(f => f.FullName);
-            return xmlFileNames;
+            if (int.TryParse(version, out int result))
+            {
+                if (result > 0 && result < 3)
+                    DataVersion = result;
+                else
+                    throw new ArgumentException($"{version} is not a valid data format version. Please pass 1 or 2");
+            }
+            else
+            {
+                throw new ArgumentException($"{version} is not a valid data format version");
+            }
         }
 
-        public void AddXmlSourcePath(string xmlSourcePath, string optionName, OptionsParser.ResultType resultType)
+        public void SetFileType(string filetype)
         {
-            if (string.IsNullOrEmpty(xmlSourcePath))
+            if (String.IsNullOrEmpty(filetype))
+                return;
+
+            if (Enum.TryParse<ESupportedFileTypes>(filetype, true, out ESupportedFileTypes result))
             {
-                throw new ArgumentNullException(xmlSourcePath);
+                fileExtension = result;
+            }
+            else
+            {
+                throw new ArgumentException($"{filetype} is not a valid file format");
+            }
+        }
+
+        private IEnumerable<string> GetAllFileNames(string directory)
+        {
+            var dir = new DirectoryInfo(directory);
+            var FileNames = dir.GetFiles("*" + fileExtension, SearchOption.AllDirectories)
+                .Select(f => f.FullName);
+            return FileNames;
+        }
+
+        public void AddSourcePath(string sourcePath, string optionName, OptionsParser.ResultType resultType)
+        {
+            System.Console.WriteLine($" Adding Source Path : {sourcePath}");
+            System.Console.WriteLine($"");
+
+            if (string.IsNullOrEmpty(sourcePath))
+            {
+                throw new ArgumentNullException(sourcePath);
             }
 
             if (string.IsNullOrEmpty(optionName))
@@ -148,50 +184,67 @@ namespace UnityPerformanceBenchmarkReporter
                 throw new ArgumentNullException(optionName);
             }
 
-            //If has .xml file extension
-            if (xmlSourcePath.EndsWith(xmlFileExtension))
+            if (sourcePath.EndsWith(fileExtension.ToString()))
             {
-                ProcessAsXmlFile(xmlSourcePath, optionName, resultType);
+                ProcessAsFile(sourcePath, optionName, resultType);
             }
             else
             {
-                ProcessAsXmlDirectory(xmlSourcePath, optionName, resultType);
+                ProcessAsDirectory(sourcePath, optionName, resultType);
             }
+
+
+
+
         }
 
-        private void ProcessAsXmlDirectory(string xmlSourcePath, string optionName, OptionsParser.ResultType resultType)
+        private void ProcessAsDirectory(string sourcePath, string optionName, OptionsParser.ResultType resultType)
         {
-            if (!Directory.Exists(xmlSourcePath))
+            if (!Directory.Exists(sourcePath))
             {
                 throw new ArgumentException(string.Format("{0} directory `{1}` cannot be found", optionName,
-                    xmlSourcePath));
+                    sourcePath));
             }
 
-            var xmlFileNames = GetAllXmlFileNames(xmlSourcePath).ToArray();
-            if (!xmlFileNames.Any())
+            var fileNames = GetAllFileNames(sourcePath).ToArray();
+            if (!fileNames.Any())
             {
-                throw new ArgumentException(string.Format("{0} directory `{1}` doesn't contain any .xml files.",
+                throw new ArgumentException(string.Format("{0} directory `{1}` doesn't contain any {2} files.",
                     optionName,
-                    xmlSourcePath));
-            }
-
-            ResultXmlDirectoryPaths.Add(xmlSourcePath);
-        }
-
-        private void ProcessAsXmlFile(string xmlSourcePath, string optionName, OptionsParser.ResultType resultType)
-        {
-            if (!File.Exists(xmlSourcePath))
-            {
-                throw new ArgumentException(string.Format("{0} file `{1}` cannot be found", optionName, xmlSourcePath));
+                    sourcePath, FileType));
             }
 
             switch (resultType)
             {
                 case OptionsParser.ResultType.Test:
-                    ResultXmlFilePaths.Add(xmlSourcePath);
+                    ResultDirectoryPaths.Add(sourcePath);
                     break;
                 case OptionsParser.ResultType.Baseline:
-                    BaselineXmlFilePaths.Add(xmlSourcePath);
+                    foreach (var filename in fileNames)
+                    {
+                        BaselineFilePaths.Add(filename);
+                    }
+
+                    break;
+                default:
+                    throw new InvalidEnumArgumentException(resultType.ToString());
+            }
+        }
+
+        private void ProcessAsFile(string sourcePath, string optionName, OptionsParser.ResultType resultType)
+        {
+            if (!File.Exists(sourcePath))
+            {
+                throw new ArgumentException(string.Format("{0} file `{1}` cannot be found", optionName, sourcePath));
+            }
+
+            switch (resultType)
+            {
+                case OptionsParser.ResultType.Test:
+                    ResultFilePaths.Add(sourcePath);
+                    break;
+                case OptionsParser.ResultType.Baseline:
+                    BaselineFilePaths.Add(sourcePath);
                     break;
                 default:
                     throw new InvalidEnumArgumentException(resultType.ToString());

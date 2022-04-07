@@ -63,6 +63,8 @@ namespace UnityPerformanceBenchmarkReporter.Report
                 var benchmarkReportFile = GetBenchmarkReportFile(reportDirectory);
                 using (var rw = new StreamWriter(benchmarkReportFile))
                 {
+                    System.Console.WriteLine($"Writing Report To: {reportDirectory.FullName}");
+                    System.Console.WriteLine($"");
                     WriteHtmlReport(rw);
                 }
             }
@@ -217,7 +219,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
                 {
                     streamWriter.WriteLine("<input type=\"checkbox\" onclick=\"toggleCanvasWithNoFailures()\">");
                 }
-                
+
             }
             else
             {
@@ -365,7 +367,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
 
         private void WriteStatMethodButtonEventListeners(StreamWriter rw)
         {
-            var statisticalMethods = new List<string> {"Min", "Max", "Median", "Average"};
+            var statisticalMethods = new List<string> { "Min", "Max", "Median", "Average" };
             foreach (var thisStatMethod in statisticalMethods)
             {
                 rw.WriteLine("	document.getElementById('{0}Button').addEventListener('click', function()",
@@ -683,7 +685,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
                         var minDefaultValue = nullString;
                         var maxDefaultValue = nullString;
                         var avgDefaultValue = nullString;
-                        var stdevDefaultValue =  nullString;
+                        var stdevDefaultValue = nullString;
                         var baselineDefaultValue = nullString;
 
                         if (performanceTestRunResult.TestResults.Any(r =>
@@ -915,7 +917,7 @@ namespace UnityPerformanceBenchmarkReporter.Report
         {
             var sampleGroupHasSamples = resultsForThisTest.SelectMany(r => r.SampleGroupResults).Any(sg =>
                 ScrubStringForSafeForVariableUse(sg.SampleGroupName) == distinctSampleGroupName);
-                return sampleGroupHasSamples;
+            return sampleGroupHasSamples;
         }
 
         private bool SampleGroupHasRegressions(IEnumerable<TestResult> resultsForThisTest,

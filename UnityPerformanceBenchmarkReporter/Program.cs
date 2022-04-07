@@ -46,11 +46,21 @@ namespace UnityPerformanceBenchmarkReporter
             var optionsParser = new OptionsParser();
 
             optionsParser.ParseOptions(performanceBenchmark, args);
-            var testResultXmlParser = new TestResultXmlParser();
+
+            IParser testResultParser = null;
+
+            if (performanceBenchmark.FileType == ESupportedFileTypes.json)
+            {
+                testResultParser = new TestResultJsonParser();
+            }
+            else if (performanceBenchmark.FileType == ESupportedFileTypes.xml)
+            {
+                testResultParser = new TestResultXmlParser();
+            }
 
             if (performanceBenchmark.BaselineResultFilesExist)
             {
-                performanceBenchmark.AddBaselinePerformanceTestRunResults(testResultXmlParser, baselinePerformanceTestRunResults, baselineTestResults);
+                performanceBenchmark.AddBaselinePerformanceTestRunResults(testResultParser, baselinePerformanceTestRunResults, baselineTestResults);
 
                 if (baselinePerformanceTestRunResults.Any())
                 {
@@ -64,7 +74,7 @@ namespace UnityPerformanceBenchmarkReporter
 
             if (performanceBenchmark.ResultFilesExist)
             {
-                performanceBenchmark.AddPerformanceTestRunResults(testResultXmlParser, performanceTestRunResults, testResults, baselineTestResults);
+                performanceBenchmark.AddPerformanceTestRunResults(testResultParser, performanceTestRunResults, testResults, baselineTestResults);
 
                 if (performanceTestRunResults.Any())
                 {
@@ -76,7 +86,7 @@ namespace UnityPerformanceBenchmarkReporter
                 }
             }
 
-            var performanceTestResults = new PerformanceTestRunResult[0]; 
+            var performanceTestResults = new PerformanceTestRunResult[0];
 
             // If we have a baseline
             if (aggregateTestRunResults.Any(a => a.IsBaseline))
@@ -106,14 +116,16 @@ namespace UnityPerformanceBenchmarkReporter
                 performanceBenchmark.SigFig,
                 performanceBenchmark.ReportDirPath,
                 performanceBenchmark.BaselineResultFilesExist);
-
-            return WriteFailedTestsAndMetricsToConsole(performanceTestResults, performanceBenchmark);
+            WriteProgressedTestsAndMetricsToConsole(performanceTestResults, performanceBenchmark);
+            int result = WriteFailedTestsAndMetricsToConsole(performanceTestResults, performanceBenchmark);
+            WriteLine($"Finished with Result {result}");
+            return result;
         }
 
         private static int WriteFailedTestsAndMetricsToConsole(PerformanceTestRunResult[] performanceTestResults, PerformanceBenchmark performanceBenchmark)
         {
             var failedTestsExist = performanceTestResults.SelectMany(ptr => ptr.TestResults)
-                .Any(tr => tr.State == (int) TestState.Failure);
+                .Any(tr => tr.State == (int)TestState.Failure);
             if (failedTestsExist)
             {
                 WriteLine("FAILURE: One ore more performance test metric aggregations is out of threshold from the baseline value.");
@@ -147,8 +159,57 @@ namespace UnityPerformanceBenchmarkReporter
                     }
                 }
             }
-            
             return performanceBenchmark.FailOnBaseline && failedTestsExist ? 1 : 0;
+        }
+
+        private static void WriteProgressedTestsAndMetricsToConsole(PerformanceTestRunResult[] performanceTestResults, PerformanceBenchmark performanceBenchmark)
+        {
+            bool loggedHeader = false;
+            var passedTestsExist = performanceTestResults.SelectMany(ptr => ptr.TestResults)
+                .Any(tr => tr.State == (int)TestState.Success);
+            if (passedTestsExist)
+            {
+
+                foreach (var performanceTestRunResult in performanceTestResults)
+                {
+                    var passedTests = performanceTestRunResult.TestResults.Where(tr => tr.State == (int)TestState.Success);
+                    if (passedTests.Any())
+                    {
+                        foreach (var tests in passedTests)
+                        {
+                            if (tests.SampleGroupResults.Any(sgr => sgr.Progressed))
+                            {
+                                if (!loggedHeader)
+                                {
+                                    loggedHeader = true;
+                                    WriteLine("Info: One ore more performance test metric aggregations is out of threshold from the baseline value.");
+                                    WriteLine("-------------------------------------");
+                                    WriteLine(" Performance tests with Progressed metrics");
+                                    WriteLine("-------------------------------------");
+                                }
+
+                                ++indentLevel;
+                                WriteLine("{0}", tests.TestName);
+
+                                var progressedSgs = tests.SampleGroupResults.Where(sgr => sgr.Progressed);
+                                foreach (var sampleGroupResult in progressedSgs)
+                                {
+                                    WriteLine("----");
+                                    WriteLine("Metric        : {0}", sampleGroupResult.SampleGroupName);
+                                    WriteLine("Aggregation   : {0}", sampleGroupResult.AggregationType);
+                                    WriteLine("New Value  : {0,8:F2}", sampleGroupResult.AggregatedValue);
+                                    WriteLine("Baseline Value: {0,8:F2}", sampleGroupResult.BaselineValue);
+                                    WriteLine("Threshold %   : {0,8:F2}", sampleGroupResult.Threshold);
+                                    WriteLine("Actual Diff % : {0,8:F2}", Math.Abs(sampleGroupResult.BaselineValue - sampleGroupResult.AggregatedValue) / sampleGroupResult.BaselineValue);
+                                }
+                                --indentLevel;
+                                WriteLine("\r\n");
+                            }
+                        }
+                    }
+                }
+            }
+
         }
 
         private static void WriteLine(string format, params object[] args)

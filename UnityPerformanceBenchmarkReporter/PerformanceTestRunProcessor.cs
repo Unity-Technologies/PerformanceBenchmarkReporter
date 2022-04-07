@@ -26,7 +26,7 @@ namespace UnityPerformanceBenchmarkReporter
                     TestName = testName,
                     TestCategories = performanceTestRun.Results.First(r => r.TestName == testName).TestCategories,
                     TestVersion = performanceTestRun.Results.First(r => r.TestName == testName).TestVersion,
-                    State = (int) TestState.Success,
+                    State = (int)TestState.Success,
                     SampleGroupResults = new List<SampleGroupResult>()
                 };
                 foreach (var sampleGroup in mergedTestExecutions[testName])
@@ -83,13 +83,24 @@ namespace UnityPerformanceBenchmarkReporter
                         sampleGroupResult.BaselineValue = baselineSampleGroupResult.AggregatedValue;
                         sampleGroupResult.Threshold = baselineSampleGroupResult.Threshold;
 
-                        sampleGroupResult.Regressed = DeterminePerformanceResult(sampleGroupResult, sigfig) == MeasurementResult.Regression;
+                        var res = DeterminePerformanceResult(sampleGroupResult, sigfig);
+
+                        if (res == MeasurementResult.Regression)
+                        {
+                            sampleGroupResult.Regressed = true;
+                            sampleGroupResult.Progressed = false;
+                        }
+                        else if (res == MeasurementResult.Progression)
+                        {
+                            sampleGroupResult.Regressed = false;
+                            sampleGroupResult.Progressed = true;
+                        }
                     }
                 }
 
                 if (testResult.SampleGroupResults.Any(r => r.Regressed))
                 {
-                    testResult.State = (int) TestState.Failure;
+                    testResult.State = (int)TestState.Failure;
                 }
             }
         }
@@ -97,7 +108,7 @@ namespace UnityPerformanceBenchmarkReporter
         private Dictionary<string, List<SampleGroup>> MergeTestExecutions(PerformanceTestRun performanceTestRun)
         {
             var mergedTestExecutions = new Dictionary<string, List<SampleGroup>>();
-            var testNames = performanceTestRun.Results.Select(te => te.TestName).Distinct().ToList();
+            var testNames = performanceTestRun.Results.Select(te => te.TestName).Where(t => !String.IsNullOrEmpty(t)).Distinct().ToList();
             foreach (var testName in testNames)
             {
                 var executions = performanceTestRun.Results.Where(te => te.TestName == testName);
@@ -152,8 +163,11 @@ namespace UnityPerformanceBenchmarkReporter
         private MeasurementResult DeterminePerformanceResult(SampleGroupResult sampleGroup, uint sigFig)
         {
             var measurementResult = MeasurementResult.Neutral;
-            var positiveThresholdValue = sampleGroup.BaselineValue + sampleGroup.BaselineValue * sampleGroup.Threshold;
-            var negativeThresholdValue = sampleGroup.BaselineValue - sampleGroup.BaselineValue * sampleGroup.Threshold;
+            var positiveThresholdValue = sampleGroup.BaselineValue + (sampleGroup.BaselineValue * sampleGroup.Threshold);
+            var negativeThresholdValue = sampleGroup.BaselineValue - (sampleGroup.BaselineValue * sampleGroup.Threshold);
+            positiveThresholdValue += sampleGroup.StandardDeviation;
+            negativeThresholdValue -= sampleGroup.StandardDeviation;
+
             if (sampleGroup.IncreaseIsBetter)
             {
                 if (sampleGroup.AggregatedValue.TruncToSigFig(sigFig) < negativeThresholdValue.TruncToSigFig(sigFig))
