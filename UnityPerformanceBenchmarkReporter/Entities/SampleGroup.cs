@@ -24,7 +24,7 @@ namespace UnityPerformanceBenchmarkReporter.Entities
     {
         public string Name;
         public SampleUnit SampleUnit;
-        public AggregationType AggregationType;
+        public AggregationType AggregationType = AggregationType.Median;
         public double Threshold;
         public bool IncreaseIsBetter;
         public double Percentile;

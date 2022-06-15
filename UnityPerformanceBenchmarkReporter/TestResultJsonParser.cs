@@ -53,6 +53,8 @@ namespace UnityPerformanceBenchmarkReporter
             try
             {
                 result = JsonConvert.DeserializeObject<PerformanceTestRun>(json);
+                var path = result.PlayerSettings.StereoRenderingPath;
+                result.PlayerSettings.StereoRenderingPath = GetStereoPath(path,result.PlayerSettings.AndroidTargetSdkVersion);
             }
             catch (System.Exception)
             {
@@ -104,7 +106,7 @@ namespace UnityPerformanceBenchmarkReporter
                         AndroidTargetSdkVersion = run.Player.AndroidTargetSdkVersion,
                         EnabledXrTargets = new List<string>(),
                         ScriptingRuntimeVersion = "",
-                        StereoRenderingPath = run.Player.StereoRenderingPath
+                        StereoRenderingPath = GetStereoPath(run.Player.StereoRenderingPath, run.Player.AndroidTargetSdkVersion)
                     },
                     QualitySettings = new QualitySettings()
                     {
@@ -177,5 +179,40 @@ namespace UnityPerformanceBenchmarkReporter
             return null;
         }
 
+        /// This allows us to get the stereo mode from a custom data string as well as the normal stereo mode setting
+        /// This is due to a bug in the perf framework where the stereo mode always displays multipass
+        /// We pass this custom string in as AndroidTargetSDKVersion
+        /// The second parameter takes in this string compares the values and overwrites the stereo mode if the mode in the custom string eists and is different
+        private static string GetStereoPath(string stereoModeString, string miscDataString)
+        {
+
+            if(string.IsNullOrWhiteSpace(stereoModeString))
+            {
+                Console.WriteLine("Stereo Mode String Is Null");
+                return "";
+            }
+                
+
+            Regex stereoModeRegex = new Regex(@"stereorenderingmode=([^|]*)");
+            var match  = stereoModeRegex.Match(miscDataString);
+            if(match.Success)
+            {
+                if(stereoModeString.ToLower() == match.Value.ToLower())
+                {
+                    return stereoModeString;
+                }
+                else
+                {
+                    return match.Value;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed To Parse Custom Data String for StereoMode");
+                return stereoModeString;
+            }
+
+            
+        }
     }
 }
