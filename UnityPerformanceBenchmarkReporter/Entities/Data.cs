@@ -26,6 +26,8 @@ namespace UnityPerformanceBenchmarkReporter.Entities.New
         public double Average;
         public double StandardDeviation;
         public double Sum;
+        public bool ContainsKnownIssue;
+        public string KnownIssueDetails = "";
 
         public SampleGroup(string name, SampleUnit unit, bool increaseIsBetter)
         {

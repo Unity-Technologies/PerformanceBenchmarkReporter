@@ -30,6 +30,8 @@ namespace UnityPerformanceBenchmarkReporter.Entities
         public double Percentile;
 
         public bool FailOnBaseline;
+        public bool ContainsKnownIssue;
+        public string KnownIssueDetails = "";
     }
 
     public enum AggregationType
