@@ -197,13 +197,17 @@ namespace UnityPerformanceBenchmarkReporter
             var match  = stereoModeRegex.Match(miscDataString);
             if(match.Success)
             {
+
+                if(match.Groups.Count <= 1)
+                    return stereoModeString;
+
                 if(stereoModeString.ToLower() == match.Value.ToLower())
                 {
                     return stereoModeString;
                 }
                 else
                 {
-                    return match.Value;
+                    return match.Groups[1].Value;
                 }
             }
             else
