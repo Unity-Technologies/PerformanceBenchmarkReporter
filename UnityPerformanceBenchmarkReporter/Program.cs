@@ -202,6 +202,7 @@ namespace UnityPerformanceBenchmarkReporter
                                     WriteLine("Baseline Value: {0,8:F2}", sampleGroupResult.BaselineValue);
                                     WriteLine("Threshold %   : {0,8:F2}", sampleGroupResult.Threshold);
                                     WriteLine("Actual Diff % : {0,8:F2}", Math.Abs(sampleGroupResult.BaselineValue - sampleGroupResult.AggregatedValue) / sampleGroupResult.BaselineValue);
+                                    WriteLine($"Known Issue: {sampleGroupResult.KnownIssueDetails}");
                                 }
                                 --indentLevel;
                                 WriteLine("\r\n");

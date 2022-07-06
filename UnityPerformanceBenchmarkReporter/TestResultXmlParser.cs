@@ -96,7 +96,7 @@ namespace UnityPerformanceBenchmarkReporter
                                     Name = sg.Name,
                                     SampleUnit = (Entities.SampleUnit)sg.Unit,
                                     IncreaseIsBetter = sg.IncreaseIsBetter,
-                                    Threshold = sg.Threshold
+                                    Threshold = sg.Threshold,
                                     ContainsKnownIssue = sg.ContainsKnownIssue,
                                     KnownIssueDetails = sg.KnownIssueDetails
                                 }

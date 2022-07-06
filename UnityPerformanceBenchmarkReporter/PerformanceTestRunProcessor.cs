@@ -46,6 +46,8 @@ namespace UnityPerformanceBenchmarkReporter
                         Average = sampleGroup.Average,
                         StandardDeviation = sampleGroup.StandardDeviation,
                         PercentileValue = sampleGroup.PercentileValue,
+                        ContainsKnownIssue = sampleGroup.Definition.ContainsKnownIssue,
+                        KnownIssueDetails = sampleGroup.Definition.KnownIssueDetails,
                         Sum = sampleGroup.Sum,
                         Zeroes = sampleGroup.Zeroes,
                         SampleCount = sampleGroup.SampleCount,
@@ -97,7 +99,7 @@ namespace UnityPerformanceBenchmarkReporter
                             sampleGroupResult.Regressed = false;
                             sampleGroupResult.Progressed = true;
                             sampleGroupResult.RegressedKnown = false;
-                        }else if(res = MeasurementResult.RegressionKnown){
+                        }else if(res == MeasurementResult.RegressionKnown){
                             sampleGroupResult.Regressed = true;
                             sampleGroupResult.Progressed = false;
                             sampleGroupResult.RegressedKnown = true;
