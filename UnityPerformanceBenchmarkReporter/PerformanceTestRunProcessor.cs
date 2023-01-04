@@ -9,7 +9,8 @@ namespace UnityPerformanceBenchmarkReporter
     {
         Neutral = 0,
         Regression = 1,
-        Progression = 2
+        Progression = 2,
+        RegressionKnown = 3
     }
 
     public class PerformanceTestRunProcessor
@@ -45,6 +46,8 @@ namespace UnityPerformanceBenchmarkReporter
                         Average = sampleGroup.Average,
                         StandardDeviation = sampleGroup.StandardDeviation,
                         PercentileValue = sampleGroup.PercentileValue,
+                        ContainsKnownIssue = sampleGroup.Definition.ContainsKnownIssue,
+                        KnownIssueDetails = sampleGroup.Definition.KnownIssueDetails,
                         Sum = sampleGroup.Sum,
                         Zeroes = sampleGroup.Zeroes,
                         SampleCount = sampleGroup.SampleCount,
@@ -89,16 +92,22 @@ namespace UnityPerformanceBenchmarkReporter
                         {
                             sampleGroupResult.Regressed = true;
                             sampleGroupResult.Progressed = false;
+                            sampleGroupResult.RegressedKnown = false;
                         }
                         else if (res == MeasurementResult.Progression)
                         {
                             sampleGroupResult.Regressed = false;
                             sampleGroupResult.Progressed = true;
+                            sampleGroupResult.RegressedKnown = false;
+                        }else if(res == MeasurementResult.RegressionKnown){
+                            sampleGroupResult.Regressed = true;
+                            sampleGroupResult.Progressed = false;
+                            sampleGroupResult.RegressedKnown = true;
                         }
                     }
                 }
 
-                if (testResult.SampleGroupResults.Any(r => r.Regressed))
+                if (testResult.SampleGroupResults.Any(r => r.Regressed && r.RegressedKnown == false))
                 {
                     testResult.State = (int)TestState.Failure;
                 }
@@ -173,6 +182,9 @@ namespace UnityPerformanceBenchmarkReporter
                 if (sampleGroup.AggregatedValue.TruncToSigFig(sigFig) < negativeThresholdValue.TruncToSigFig(sigFig))
                 {
                     measurementResult = MeasurementResult.Regression;
+                    
+                    if(sampleGroup.ContainsKnownIssue)
+                        measurementResult = MeasurementResult.RegressionKnown;
                 }
                 if (sampleGroup.AggregatedValue.TruncToSigFig(sigFig) > positiveThresholdValue.TruncToSigFig(sigFig))
                 {
@@ -184,6 +196,9 @@ namespace UnityPerformanceBenchmarkReporter
                 if (sampleGroup.AggregatedValue.TruncToSigFig(sigFig) > positiveThresholdValue.TruncToSigFig(sigFig))
                 {
                     measurementResult = MeasurementResult.Regression;
+
+                    if(sampleGroup.ContainsKnownIssue)
+                        measurementResult = MeasurementResult.RegressionKnown;
                 }
                 if (sampleGroup.AggregatedValue.TruncToSigFig(sigFig) < negativeThresholdValue.TruncToSigFig(sigFig))
                 {

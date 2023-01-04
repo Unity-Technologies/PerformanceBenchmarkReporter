@@ -13,6 +13,9 @@ namespace UnityPerformanceBenchmarkReporter.Entities
         public double Percentile;
         public bool Regressed;
         public bool Progressed;
+        public bool RegressedKnown;
+        public bool ContainsKnownIssue;
+        public string KnownIssueDetails;
         public double Min;
         public double Max;
         public double Median;
