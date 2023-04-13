@@ -62,7 +62,7 @@ namespace UnityPerformanceBenchmarkReporter
             return performanceTestResults;
         }
 
-        public void UpdateTestResultsBasedOnBaselineResults(List<TestResult> baselineTestResults,
+        public void UpdateTestResultsBasedOnBaselineResults(List<TestResult> baselineTestResults, List<string> ignoredMetrics,
             List<TestResult> testResults, uint sigfig)
         {
             foreach (var testResult in testResults)
@@ -76,7 +76,7 @@ namespace UnityPerformanceBenchmarkReporter
                 foreach (var sampleGroupResult in testResult.SampleGroupResults)
                 {
                     // if we have a corresponding baseline samplegroupname in this sampleGroupResult, compare them
-                    if (baselineSampleGroupResults.Any(sg => sg.SampleGroupName == sampleGroupResult.SampleGroupName))
+                    if ( baselineSampleGroupResults.Any(sg => sg.SampleGroupName == sampleGroupResult.SampleGroupName && !ignoredMetrics.Contains(sampleGroupResult.SampleGroupName)) )
                     {
                         // Get the baselineSampleGroupResult that corresponds to this SampleGroupResults sample group name
                         var baselineSampleGroupResult = baselineSampleGroupResults.First(sg => sg.SampleGroupName == sampleGroupResult.SampleGroupName);
