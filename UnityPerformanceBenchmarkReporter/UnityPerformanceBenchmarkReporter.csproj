@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
     <startupobject>UnityPerformanceBenchmarkReporter.Program</startupobject>
 	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	<TargetFrameworks>netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
