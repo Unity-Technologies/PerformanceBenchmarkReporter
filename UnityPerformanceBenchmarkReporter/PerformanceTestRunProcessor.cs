@@ -175,7 +175,7 @@ namespace UnityPerformanceBenchmarkReporter
         {
             var measurementResult = MeasurementResult.Neutral;
 
-            var baselineval =  sampleGroup.BaselineValue;// + sampleGroup.StandardDeviation ; //TODO Add flag to use standard dveationm or not
+            var baselineval =  sampleGroup.BaselineValue;// + sampleGroup.StandardDeviation ; //TODO Add flag to use standard deviation or not
             var positiveThresholdValue = baselineval + (baselineval * sampleGroup.Threshold);
             var negativeThresholdValue = baselineval - (baselineval * sampleGroup.Threshold);
            
