@@ -85,6 +85,8 @@ namespace UnityPerformanceBenchmarkReporter
                         // whether or not a regression has occurred.
                         sampleGroupResult.BaselineValue = baselineSampleGroupResult.AggregatedValue;
                         sampleGroupResult.Threshold = baselineSampleGroupResult.Threshold;
+                        sampleGroupResult.StandardDeviation = baselineSampleGroupResult.StandardDeviation;
+                        sampleGroupResult.IncreaseIsBetter = baselineSampleGroupResult.IncreaseIsBetter;
 
                         var res = DeterminePerformanceResult(sampleGroupResult, sigfig);
 
@@ -172,10 +174,11 @@ namespace UnityPerformanceBenchmarkReporter
         private MeasurementResult DeterminePerformanceResult(SampleGroupResult sampleGroup, uint sigFig)
         {
             var measurementResult = MeasurementResult.Neutral;
-            var positiveThresholdValue = sampleGroup.BaselineValue + (sampleGroup.BaselineValue * sampleGroup.Threshold);
-            var negativeThresholdValue = sampleGroup.BaselineValue - (sampleGroup.BaselineValue * sampleGroup.Threshold);
-            positiveThresholdValue += sampleGroup.StandardDeviation;
-            negativeThresholdValue -= sampleGroup.StandardDeviation;
+
+            var baselineval =  sampleGroup.BaselineValue;// + sampleGroup.StandardDeviation ; //TODO Add flag to use standard deviation or not
+            var positiveThresholdValue = baselineval + (baselineval * sampleGroup.Threshold);
+            var negativeThresholdValue = baselineval - (baselineval * sampleGroup.Threshold);
+           
 
             if (sampleGroup.IncreaseIsBetter)
             {
