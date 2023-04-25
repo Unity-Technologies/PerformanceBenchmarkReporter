@@ -38,6 +38,8 @@ namespace UnityPerformanceBenchmarkReporter
 
         public bool ResultFilesExist => ResultFilePaths.Any() || ResultDirectoryPaths.Any();
 
+        public List<string> IgnoredMetrics = new List<string>();
+
 
         public void AddPerformanceTestRunResults(
             IParser testResultParser,
@@ -116,7 +118,7 @@ namespace UnityPerformanceBenchmarkReporter
 
                         testResults.AddRange(results);
 
-                        performanceTestRunProcessor.UpdateTestResultsBasedOnBaselineResults(baselineTestResults, testResults, SigFig);
+                        performanceTestRunProcessor.UpdateTestResultsBasedOnBaselineResults(baselineTestResults, IgnoredMetrics, testResults, SigFig);
 
                         TestRunMetadataProcessor.ProcessMetadata(performanceTestRun, resultFilesOrderedByResultName[i].Key);
 
@@ -129,6 +131,11 @@ namespace UnityPerformanceBenchmarkReporter
                     }
                 }
             }
+        }
+
+        public void SetIgnoredMetrics(string metrics)
+        {
+            IgnoredMetrics = metrics.Split(';').ToList();
         }
 
         public void SetDataVersion(string version)

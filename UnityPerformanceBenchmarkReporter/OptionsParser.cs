@@ -74,6 +74,9 @@ namespace UnityPerformanceBenchmarkReporter
             optionsSet.Add(
                     "report|reportdirpath:", "OPTIONAL - Path to where the report will be written. Default is current working directory.",
                     performanceBenchmark.AddReportDirPath);
+            optionsSet.Add("ignore:",
+                "send in ; seperated list of metric names. These metrics are ignored and not compared even if they both exist on baseline and results",
+                option => performanceBenchmark.SetIgnoredMetrics(option));
             optionsSet.Add("failonbaseline",
                 "Enable return '1' by the reporter if a baseline is passed in and one or more matching configs is out of threshold. Disabled is default. Use option to enable, or use option and append '-' to explicitly disable.",
                 option => performanceBenchmark.FailOnBaseline = option != null);
