@@ -8,7 +8,7 @@ namespace UnityPerformanceBenchmarkReporter
     public class OptionsParser
     {
         private bool help;
-        private readonly string about = "The Unity Performance Benchmark Reporter enables the comparison of performance metric baselines and subsequent performance metrics (as generated using the Unity Test Runner with the Unity Performance Testing Extension) in an html report utilizing graphical visualizations.";
+        private readonly string about = "The Unity Performance Benchmark Reporter enables the comparison of performance metric baselines and subsequent performance metrics (as generated using the Unity Test Runner with the Unity Performance Testing Extension) for use in test run pipelines and/or for generating an html report utilizing graphical visualizations.";
 
         private readonly string learnMore =
             "To learn more about the Unity Performance Benchmark Reporter visit the Unity Performance Benchmark Reporter GitHub wiki at https://github.com/Unity-Technologies/PerformanceBenchmarkReporter/wiki.";
@@ -16,11 +16,12 @@ namespace UnityPerformanceBenchmarkReporter
         private readonly string commandLineOptionFormat =
             "// Command line option format\r\n--results=<Path to a test result XML filename OR directory>... [--baseline=\"Path to a baseline XML filename\"] [--reportdirpath=\"Path to where the report will be written\"]";
 
-        private readonly string example1 = "// Run reporter with one performance test result .xml file\r\n--results=\"G:\\My Drive\\XRPerfRuns\\results\\results.xml\"";
+        private readonly string example1 = "// Run reporter with one performance test result .xml file\r\n --results=\"G:\\My Drive\\XRPerfRuns\\results\\results.xml\"";
+        private readonly string example2 = "// Run reporter with one performance test result .json file\r\n--format=json --results=\"G:\\My Drive\\XRPerfRuns\\results\\results.json\"";
+        private readonly string example3 = "// Run reporter with one performance test result .json file which is in v1 format \r\n--dataversion=1 --format=json --results=\"G:\\My Drive\\XRPerfRuns\\results\\results.json\"";
+        private readonly string example4 = "// Run reporter against a directory containing one or more performance test result files of the same file type\r\n --format=json --results=\"G:\\My Drive\\XRPerfRuns\\results\"  ";
+        private readonly string example5 = "// Run reporter against a directory containing one or more performance test result files, and a baseline result file. (File extension can be xml or json but both must be the same)\r\n--results=\"G:\\My Drive\\XRPerfRuns\\results\" --baseline=\"G:\\My Drive\\XRPerfRuns\\baselines\\baseline.xml\" ";
 
-        private readonly string example2 = "// Run reporter against a directory containing one or more performance test result .xml files\r\n--results=\"G:\\My Drive\\XRPerfRuns\\results\"  ";
-
-        private readonly string example3 = "// Run reporter against a directory containing one or more performance test result .xml files, and a baseline .xml result file\r\n--results=\"G:\\My Drive\\XRPerfRuns\\results\" --baseline=\"G:\\My Drive\\XRPerfRuns\\baselines\\baseline.xml\" ";
 
         public enum ResultType
         {
@@ -66,10 +67,10 @@ namespace UnityPerformanceBenchmarkReporter
             optionsSet.Add("fileformat|format=", "Sets Expected File Format for Results and Baseline Files. If no arg is provided we assume the format is XML", filtype => performanceBenchmark.SetFileType(filtype));
             optionsSet.Add(
                     "results|testresultsxmlsource=",
-                    "REQUIRED - Path to a test result XML filename OR directory. Directories are searched resursively. You can repeat this option with multiple result file or directory paths.",
+                    "REQUIRED - Path to a test result filename OR directory. Directories are searched resursively. You can repeat this option with multiple result file or directory paths.",
                 xmlsource => performanceBenchmark.AddSourcePath(xmlsource, "results", ResultType.Test));
             optionsSet.Add(
-                    "baseline|baselinexmlsource:", "OPTIONAL - Path to a baseline XML filename.",
+                    "baseline|baselinexmlsource:", "OPTIONAL - Path to a baseline filename.",
                     xmlsource => performanceBenchmark.AddSourcePath(xmlsource, "baseline", ResultType.Baseline));
             optionsSet.Add(
                     "report|reportdirpath:", "OPTIONAL - Path to where the report will be written. Default is current working directory.",
@@ -99,6 +100,8 @@ namespace UnityPerformanceBenchmarkReporter
             Console.WriteLine(example1 + "\r\n");
             Console.WriteLine(example2 + "\r\n");
             Console.WriteLine(example3 + "\r\n");
+            Console.WriteLine(example4 + "\r\n");
+            Console.WriteLine(example5 + "\r\n");
             Console.WriteLine("Options: \r\n");
             optionSet.WriteOptionDescriptions(Console.Error);
             Environment.Exit(-1);
